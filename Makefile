@@ -15,6 +15,16 @@ run:
 env-up:
 	@docker-compose up -d
 
+env-cleanup: ## env: Очистить окружение проекта
+	@read -p "Remove postgres volume?. [y/N]: " ans; \
+	if [ "$$ans" = "y" ]; then \
+		docker compose down postgres port-forwarder && \
+		docker volume rm url-shortener_pgdata && \
+		echo "Cleanup environment files"; \
+	else \
+		echo "Environment cleanup cancelled"; \
+	fi
+
 env-down:
 	@docker-compose down
 

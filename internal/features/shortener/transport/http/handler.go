@@ -8,15 +8,15 @@ import (
 )
 
 type Handler struct {
-	shortenerService ShortenerService
+	shortenerService Service
 }
 
-type ShortenerService interface {
+type Service interface {
 	CreateShortLink(ctx context.Context, originalURL string) (domain.Link, error)
 	ResolveShortLink(ctx context.Context, code string) (string, error)
 }
 
-func NewShortenerHTTPHandler(shortenerService ShortenerService) *Handler {
+func NewHTTPHandler(shortenerService Service) *Handler {
 	return &Handler{
 		shortenerService: shortenerService,
 	}

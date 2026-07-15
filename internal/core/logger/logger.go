@@ -53,19 +53,24 @@ func NewLogger(config Config) (*Logger, error) {
 	)
 
 	logFile, err := os.OpenFile(logfilePath, os.O_CREATE|os.O_WRONLY, 0644)
-
 	if err != nil {
 		return nil, fmt.Errorf("open log file: %w", err)
 	}
 
-	zapConfig := zap.NewDevelopmentEncoderConfig()
-	zapConfig.EncodeTime = zapcore.TimeEncoderOfLayout("2006-01-02T15:04:05.000000")
+	timeLayout := "2006-01-02T15:04:05.000000"
 
-	zapEncoder := zapcore.NewConsoleEncoder(zapConfig)
+	consoleConfig := zap.NewDevelopmentEncoderConfig()
+	consoleConfig.EncodeTime = zapcore.TimeEncoderOfLayout(timeLayout)
+	consoleConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
+	consoleEncoder := zapcore.NewConsoleEncoder(consoleConfig)
+
+	fileConfig := zap.NewDevelopmentEncoderConfig()
+	fileConfig.EncodeTime = zapcore.TimeEncoderOfLayout(timeLayout)
+	fileEncoder := zapcore.NewConsoleEncoder(fileConfig)
 
 	core := zapcore.NewTee(
-		zapcore.NewCore(zapEncoder, zapcore.AddSync(os.Stdout), zapLvl),
-		zapcore.NewCore(zapEncoder, zapcore.AddSync(logFile), zapLvl),
+		zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), zapLvl),
+		zapcore.NewCore(fileEncoder, zapcore.AddSync(logFile), zapLvl),
 	)
 
 	zapLogger := zap.New(core, zap.AddCaller())

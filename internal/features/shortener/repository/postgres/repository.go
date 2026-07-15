@@ -6,7 +6,7 @@ type Repository struct {
 	pool pool.Pool
 }
 
-func NewShortenerRepository(pool pool.Pool) *Repository {
+func NewRepository(pool pool.Pool) *Repository {
 	return &Repository{
 		pool,
 	}

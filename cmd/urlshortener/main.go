@@ -11,9 +11,7 @@ import (
 	"github.com/vladislav-koval/url-shortener/internal/core/repository/postgres/pool/pgx"
 	"github.com/vladislav-koval/url-shortener/internal/core/transport/http/middleware"
 	"github.com/vladislav-koval/url-shortener/internal/core/transport/http/server"
-	shortenerpg "github.com/vladislav-koval/url-shortener/internal/features/shortener/repository/postgres"
-	shortenersvc "github.com/vladislav-koval/url-shortener/internal/features/shortener/service"
-	shortenerhttp "github.com/vladislav-koval/url-shortener/internal/features/shortener/transport/http"
+	"github.com/vladislav-koval/url-shortener/internal/features/shortener"
 	"go.uber.org/zap"
 )
 
@@ -36,9 +34,8 @@ func main() {
 	defer pgxPool.Close()
 
 	log.Debug("initializing feature", zap.String("feature", "url shortener"))
-	shortenerRepository := shortenerpg.NewShortenerRepository(pgxPool)
-	shortenerService := shortenersvc.NewShortenerService(shortenerRepository)
-	shortenerHTTPHandler := shortenerhttp.NewShortenerHTTPHandler(shortenerService)
+
+	shortenerModule := shortener.NewModule(pgxPool)
 
 	log.Debug("initializing HTTP server")
 	httpConfig := server.NewConfigMust()
@@ -52,7 +49,7 @@ func main() {
 		middleware.Panic(),
 	)
 
-	httpServer.RegisterRoutes(shortenerHTTPHandler.Routes()...)
+	httpServer.RegisterRoutes(shortenerModule.Handler.Routes()...)
 
 	if err := httpServer.Run(ctx); err != nil {
 		log.Error("Failed to start server", zap.Error(err))

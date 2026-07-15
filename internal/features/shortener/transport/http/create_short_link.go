@@ -26,7 +26,7 @@ func (h *Handler) CreateShortLink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res := newCreateLinkResponse(linkDomain)
+	res := newCreateLinkResponseFromDomain(linkDomain)
 
 	responseHandler.JSONResponse(res, http.StatusCreated)
 }

@@ -7,15 +7,15 @@ import (
 )
 
 type Service struct {
-	shortenerRepository ShortenerRepository
+	shortenerRepository Repository
 }
 
-type ShortenerRepository interface {
+type Repository interface {
 	CreateShortLink(ctx context.Context, shortCode string, originalURL string) error
 	GetByShortCode(ctx context.Context, code string) (domain.Link, error)
 }
 
-func NewShortenerService(shortenerRepository ShortenerRepository) *Service {
+func NewService(shortenerRepository Repository) *Service {
 	return &Service{
 		shortenerRepository: shortenerRepository,
 	}

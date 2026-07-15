@@ -13,7 +13,7 @@ type CreateLinkResponse struct {
 	OriginalURL string `json:"original_url"`
 }
 
-func newCreateLinkResponse(link domain.Link) CreateLinkResponse {
+func newCreateLinkResponseFromDomain(link domain.Link) CreateLinkResponse {
 	return CreateLinkResponse{
 		ShortCode:   link.ShortCode,
 		OriginalURL: link.OriginalURL,
