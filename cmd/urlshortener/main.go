@@ -9,6 +9,7 @@ import (
 
 	"github.com/vladislav-koval/url-shortener/internal/core/logger"
 	"github.com/vladislav-koval/url-shortener/internal/core/repository/postgres/pool/pgx"
+	"github.com/vladislav-koval/url-shortener/internal/core/repository/redis/goredis"
 	"github.com/vladislav-koval/url-shortener/internal/core/transport/http/middleware"
 	"github.com/vladislav-koval/url-shortener/internal/core/transport/http/server"
 	"github.com/vladislav-koval/url-shortener/internal/features/shortener"
@@ -33,9 +34,15 @@ func main() {
 	}
 	defer pgxPool.Close()
 
-	log.Debug("initializing feature", zap.String("feature", "url shortener"))
+	log.Debug("initializing redis")
+	redisClient, err := goredis.NewRedis(ctx, goredis.NewConfigMust())
+	if err != nil {
+		log.Fatal("failed to init redis client", zap.Error(err))
+	}
+	defer redisClient.Close()
 
-	shortenerModule := shortener.NewModule(pgxPool)
+	log.Debug("initializing feature", zap.String("feature", "url shortener"))
+	shortenerModule := shortener.NewModule(pgxPool, redisClient)
 
 	log.Debug("initializing HTTP server")
 	httpConfig := server.NewConfigMust()

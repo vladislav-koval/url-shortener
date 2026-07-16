@@ -11,7 +11,7 @@ type Service struct {
 }
 
 type Repository interface {
-	CreateShortLink(ctx context.Context, shortCode string, originalURL string) error
+	CreateShortLink(ctx context.Context, shortCode string, originalURL string) (domain.Link, error)
 	GetByShortCode(ctx context.Context, code string) (domain.Link, error)
 }
 

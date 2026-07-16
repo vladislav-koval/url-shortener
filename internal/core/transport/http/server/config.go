@@ -17,7 +17,7 @@ func NewConfig() (Config, error) {
 	var config Config
 
 	if err := envconfig.Process("HTTP", &config); err != nil {
-		return Config{}, fmt.Errorf("failed to process env logger config: %w", err)
+		return Config{}, fmt.Errorf("failed to process env server config: %w", err)
 	}
 
 	return config, nil

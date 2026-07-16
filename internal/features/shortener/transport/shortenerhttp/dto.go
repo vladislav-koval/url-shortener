@@ -1,4 +1,4 @@
-package http
+package shortenerhttp
 
 import (
 	"github.com/vladislav-koval/url-shortener/internal/core/domain"

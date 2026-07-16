@@ -1,4 +1,4 @@
-package http
+package shortenerhttp
 
 import (
 	"net/http"
