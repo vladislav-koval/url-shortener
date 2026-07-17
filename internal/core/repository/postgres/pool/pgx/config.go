@@ -17,7 +17,6 @@ type Config struct {
 }
 
 func NewConfig() (Config, error) {
-
 	var config Config
 	if err := envconfig.Process("POSTGRES", &config); err != nil {
 		return Config{}, fmt.Errorf("failed to process env postgres config: %w", err)

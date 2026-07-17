@@ -1,0 +1,50 @@
+package goredis
+
+import (
+	"context"
+	"fmt"
+	"time"
+
+	"github.com/redis/go-redis/v9"
+	cache "github.com/vladislav-koval/url-shortener/internal/core/repository/redis"
+)
+
+type Redis struct {
+	client *redis.Client
+	ttl    time.Duration
+}
+
+func NewRedis(ctx context.Context, config Config) (*Redis, error) {
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("%s:%s", config.Host, config.Port),
+		Password: config.Password,
+		DB:       config.DB,
+	})
+
+	if err := rdb.Ping(ctx).Err(); err != nil {
+		return nil, fmt.Errorf("failed to ping redis: %w", err)
+	}
+
+	return &Redis{
+		client: rdb,
+		ttl:    config.TTL,
+	}, nil
+}
+
+func (c *Redis) Set(ctx context.Context, key string, value interface{}, expiration time.Duration) cache.StatusCmd {
+	cmd := c.client.Set(ctx, key, value, expiration)
+	return goredisStatusCmd{cmd}
+}
+
+func (c *Redis) Get(ctx context.Context, key string) cache.StringCmd {
+	cmd := c.client.Get(ctx, key)
+	return goredisStringCmd{cmd}
+}
+
+func (c *Redis) TTL() time.Duration {
+	return c.ttl
+}
+
+func (c *Redis) Close() error {
+	return c.client.Close()
+}

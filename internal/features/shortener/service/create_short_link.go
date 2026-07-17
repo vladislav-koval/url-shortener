@@ -17,9 +17,9 @@ const (
 )
 
 func (s *Service) CreateShortLink(ctx context.Context, originalURL string) (domain.Link, error) {
-	link := domain.NewLink("", originalURL)
+	uninitializedLink := domain.NewLink("", originalURL)
 
-	if err := link.Validate(); err != nil {
+	if err := uninitializedLink.Validate(); err != nil {
 		return domain.Link{}, fmt.Errorf("validate link: %w", err)
 	}
 
@@ -29,11 +29,10 @@ func (s *Service) CreateShortLink(ctx context.Context, originalURL string) (doma
 			return domain.Link{}, fmt.Errorf("generate short code: %w", err)
 		}
 
-		link.ShortCode = code
+		domainLink, err := s.shortenerRepository.CreateShortLink(ctx, code, uninitializedLink.OriginalURL)
 
-		err = s.shortenerRepository.CreateShortLink(ctx, link.ShortCode, link.OriginalURL)
 		if err == nil {
-			return link, nil
+			return domainLink, nil
 		}
 
 		if errors.Is(err, apperrors.ErrConflict) {
