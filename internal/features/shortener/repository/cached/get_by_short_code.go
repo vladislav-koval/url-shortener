@@ -28,9 +28,7 @@ func (r *Repository) GetByShortCode(ctx context.Context, code string) (domain.Li
 		return domain.Link{}, err
 	}
 
-	err = r.cache.Set(ctx, code, domainLink.OriginalURL, r.cache.TTL()).Err()
-
-	if err != nil {
+	if err := r.cache.Set(ctx, code, domainLink.OriginalURL, r.ttl).Err(); err != nil {
 		log.Error("cache set", zap.Error(err))
 	}
 

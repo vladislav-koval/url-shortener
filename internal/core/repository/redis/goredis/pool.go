@@ -11,7 +11,6 @@ import (
 
 type Redis struct {
 	client *redis.Client
-	ttl    time.Duration
 }
 
 func NewRedis(ctx context.Context, config Config) (*Redis, error) {
@@ -25,10 +24,7 @@ func NewRedis(ctx context.Context, config Config) (*Redis, error) {
 		return nil, fmt.Errorf("failed to ping redis: %w", err)
 	}
 
-	return &Redis{
-		client: rdb,
-		ttl:    config.TTL,
-	}, nil
+	return &Redis{client: rdb}, nil
 }
 
 func (c *Redis) Set(ctx context.Context, key string, value interface{}, expiration time.Duration) cache.StatusCmd {
@@ -39,10 +35,6 @@ func (c *Redis) Set(ctx context.Context, key string, value interface{}, expirati
 func (c *Redis) Get(ctx context.Context, key string) cache.StringCmd {
 	cmd := c.client.Get(ctx, key)
 	return goredisStringCmd{cmd}
-}
-
-func (c *Redis) TTL() time.Duration {
-	return c.ttl
 }
 
 func (c *Redis) Close() error {

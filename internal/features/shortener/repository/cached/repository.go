@@ -1,18 +1,28 @@
 package cached
 
 import (
+	"context"
+	"time"
+
+	"github.com/vladislav-koval/url-shortener/internal/core/domain"
 	cache "github.com/vladislav-koval/url-shortener/internal/core/repository/redis"
-	"github.com/vladislav-koval/url-shortener/internal/features/shortener/service"
 )
 
-type Repository struct {
-	cache          cache.Store
-	mainRepository service.Repository
+type UnderlyingRepository interface {
+	CreateShortLink(ctx context.Context, shortCode string, originalURL string) (domain.Link, error)
+	GetByShortCode(ctx context.Context, code string) (domain.Link, error)
 }
 
-func NewRepository(cache cache.Store, mainRepository service.Repository) *Repository {
+type Repository struct {
+	cache          cache.Pool
+	ttl            time.Duration
+	mainRepository UnderlyingRepository
+}
+
+func NewRepository(cache cache.Pool, cfg Config, mainRepository UnderlyingRepository) *Repository {
 	return &Repository{
 		cache:          cache,
+		ttl:            cfg.TTL,
 		mainRepository: mainRepository,
 	}
 }

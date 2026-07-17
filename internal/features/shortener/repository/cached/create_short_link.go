@@ -16,9 +16,7 @@ func (r *Repository) CreateShortLink(ctx context.Context, shortCode string, orig
 		return domain.Link{}, err
 	}
 
-	err = r.cache.Set(ctx, domainLink.ShortCode, domainLink.OriginalURL, r.cache.TTL()).Err()
-
-	if err != nil {
+	if err := r.cache.Set(ctx, domainLink.ShortCode, domainLink.OriginalURL, r.ttl).Err(); err != nil {
 		log.Error("cache set", zap.Error(err))
 	}
 
