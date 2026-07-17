@@ -16,6 +16,7 @@ type Module struct {
 func NewModule(pool *pgx.Pool, cache *goredis.Redis) *Module {
 	shortenerRepository := cached.NewRepository(
 		cache,
+		cached.NewConfigMust(),
 		postgres.NewRepository(pool),
 	)
 
