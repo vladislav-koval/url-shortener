@@ -26,3 +26,17 @@ func NewRepository(cache cache.Pool, cfg Config, mainRepository UnderlyingReposi
 		mainRepository: mainRepository,
 	}
 }
+
+const keyPrefix = "shortener:url:"
+
+func cacheKey(shortCode string) string {
+	return keyPrefix + shortCode
+}
+
+func (r *Repository) setCache(ctx context.Context, shortCode string, originalURL string) error {
+	return r.cache.Set(ctx, cacheKey(shortCode), originalURL, r.ttl).Err()
+}
+
+func (r *Repository) getCache(ctx context.Context, shortCode string) (string, error) {
+	return r.cache.Get(ctx, cacheKey(shortCode)).Result()
+}
