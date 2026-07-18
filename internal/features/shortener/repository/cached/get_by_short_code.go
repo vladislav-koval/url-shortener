@@ -13,7 +13,7 @@ import (
 func (r *Repository) GetByShortCode(ctx context.Context, code string) (domain.Link, error) {
 	log := logger.FromContext(ctx)
 
-	originalURL, err := r.cache.Get(ctx, code).Result()
+	originalURL, err := r.getCache(ctx, code)
 
 	if err == nil {
 		return domain.NewLink(code, originalURL), nil
@@ -28,7 +28,7 @@ func (r *Repository) GetByShortCode(ctx context.Context, code string) (domain.Li
 		return domain.Link{}, err
 	}
 
-	if err := r.cache.Set(ctx, code, domainLink.OriginalURL, r.ttl).Err(); err != nil {
+	if err := r.setCache(ctx, code, domainLink.OriginalURL); err != nil {
 		log.Error("cache set", zap.Error(err))
 	}
 
