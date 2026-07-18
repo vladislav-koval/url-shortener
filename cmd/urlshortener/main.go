@@ -8,11 +8,13 @@ import (
 	"syscall"
 
 	"github.com/vladislav-koval/url-shortener/internal/core/logger"
+	"github.com/vladislav-koval/url-shortener/internal/core/messaging/kafka/segmentio"
 	"github.com/vladislav-koval/url-shortener/internal/core/repository/postgres/pool/pgx"
 	"github.com/vladislav-koval/url-shortener/internal/core/repository/redis/goredis"
 	"github.com/vladislav-koval/url-shortener/internal/core/transport/http/middleware"
 	"github.com/vladislav-koval/url-shortener/internal/core/transport/http/server"
 	"github.com/vladislav-koval/url-shortener/internal/features/shortener"
+	"github.com/vladislav-koval/url-shortener/internal/features/shortener/recorder"
 	"go.uber.org/zap"
 )
 
@@ -41,8 +43,19 @@ func main() {
 	}
 	defer redisClient.Close()
 
+	log.Debug("initializing kafka click writer")
+	recorderConfig := recorder.NewConfigMust()
+	clickWriter := segmentio.NewWriter(
+		segmentio.NewConfigMust(),
+		recorderConfig.Topic,
+		recorderConfig.BatchSize,
+		recorderConfig.BatchTimeout,
+		log,
+	)
+	defer clickWriter.Close()
+
 	log.Debug("initializing feature", zap.String("feature", "url shortener"))
-	shortenerModule := shortener.NewModule(pgxPool, redisClient)
+	shortenerModule := shortener.NewModule(pgxPool, redisClient, clickWriter)
 
 	log.Debug("initializing HTTP server")
 	httpConfig := server.NewConfigMust()

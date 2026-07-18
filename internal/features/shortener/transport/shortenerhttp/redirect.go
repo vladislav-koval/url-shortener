@@ -19,7 +19,9 @@ func (h *Handler) Redirect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	originalURL, err := h.shortenerService.ResolveShortLink(r.Context(), shortCode)
+	clientIP := request.GetClientIP(r)
+
+	originalURL, err := h.shortenerService.ResolveShortLink(r.Context(), shortCode, clientIP)
 
 	if err != nil {
 		responseHandler.ErrorResponse(err, "failed to get url")
