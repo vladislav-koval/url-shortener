@@ -4,10 +4,12 @@ import (
 	"context"
 
 	"github.com/vladislav-koval/url-shortener/internal/core/domain"
+	"github.com/vladislav-koval/url-shortener/internal/core/messaging/events"
 )
 
 type Service struct {
 	shortenerRepository Repository
+	clickRecorder       ClickRecorder
 }
 
 type Repository interface {
@@ -15,8 +17,13 @@ type Repository interface {
 	GetByShortCode(ctx context.Context, code string) (domain.Link, error)
 }
 
-func NewService(shortenerRepository Repository) *Service {
+type ClickRecorder interface {
+	RecordClick(ctx context.Context, clickEvent events.ClickEvent)
+}
+
+func NewService(shortenerRepository Repository, clickRecorder ClickRecorder) *Service {
 	return &Service{
 		shortenerRepository: shortenerRepository,
+		clickRecorder:       clickRecorder,
 	}
 }

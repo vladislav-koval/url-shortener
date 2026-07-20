@@ -46,6 +46,14 @@ env-port-forward:
 env-port-close:
 	@docker-compose down port-forwarder
 
+kafka-topic-init:
+	docker-compose exec kafka /opt/kafka/bin/kafka-topics.sh \
+		--bootstrap-server localhost:9092 \
+		--create --if-not-exists \
+		--topic ${KAFKA_TOPIC} \
+		--partitions 3 \
+		--replication-factor 1
+
 migrate-up:
 	@make migrate-action action=up
 
