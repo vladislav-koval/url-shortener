@@ -18,8 +18,9 @@ env-up:
 env-cleanup: ## env: Очистить окружение проекта
 	@read -p "Remove postgres volume?. [y/N]: " ans; \
 	if [ "$$ans" = "y" ]; then \
-		docker compose down postgres port-forwarder && \
+		docker compose down postgres port-forwarder kafka --volumes && \
 		docker volume rm url-shortener_pgdata && \
+		docker volume rm url-shortener_kafkadata && \
 		echo "Cleanup environment files"; \
 	else \
 		echo "Environment cleanup cancelled"; \

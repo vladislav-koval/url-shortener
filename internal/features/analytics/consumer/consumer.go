@@ -22,7 +22,7 @@ const (
 	saveRetryBackoff = 500 * time.Millisecond
 )
 
-type ClickProcessor struct {
+type ClickConsumer struct {
 	reader       gokafka.Reader
 	repository   ClickRepository
 	log          *logger.Logger
@@ -30,8 +30,8 @@ type ClickProcessor struct {
 	batchTimeout time.Duration
 }
 
-func NewClickProcessor(reader gokafka.Reader, repository ClickRepository, log *logger.Logger, cfg Config) *ClickProcessor {
-	return &ClickProcessor{
+func NewClickConsumer(reader gokafka.Reader, repository ClickRepository, log *logger.Logger, cfg Config) *ClickConsumer {
+	return &ClickConsumer{
 		reader:       reader,
 		repository:   repository,
 		log:          log,
@@ -40,7 +40,7 @@ func NewClickProcessor(reader gokafka.Reader, repository ClickRepository, log *l
 	}
 }
 
-func (p *ClickProcessor) Start(ctx context.Context) {
+func (p *ClickConsumer) Start(ctx context.Context) {
 	msgChannel := make(chan gokafka.Message, p.batchSize)
 
 	go func() {
@@ -116,7 +116,7 @@ func (p *ClickProcessor) Start(ctx context.Context) {
 	}
 }
 
-func (p *ClickProcessor) flush(ctx context.Context, events []events.ClickEvent, msgs []gokafka.Message) {
+func (p *ClickConsumer) flush(ctx context.Context, events []events.ClickEvent, msgs []gokafka.Message) {
 	if len(events) == 0 {
 		return
 	}

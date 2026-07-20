@@ -19,9 +19,9 @@ func StartConsumer(
 ) {
 	repository := postgres.NewRepository(pool)
 	cfg := consumer.NewConfigMust()
-	clickProcessor := consumer.NewClickProcessor(reader, repository, log, cfg)
+	clickConsumer := consumer.NewClickConsumer(reader, repository, log, cfg)
 
 	for i := 0; i < count; i++ {
-		go clickProcessor.Start(ctx)
+		go clickConsumer.Start(ctx)
 	}
 }
