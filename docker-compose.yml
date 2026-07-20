@@ -43,7 +43,6 @@ services:
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     volumes:
       - kafkadata:/var/lib/kafka/data
     restart: always

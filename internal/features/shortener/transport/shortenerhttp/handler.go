@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/vladislav-koval/url-shortener/internal/core/domain"
-	"github.com/vladislav-koval/url-shortener/internal/core/messaging/events"
 	"github.com/vladislav-koval/url-shortener/internal/core/transport/http/server"
 )
 
@@ -14,7 +13,7 @@ type Handler struct {
 
 type Service interface {
 	CreateShortLink(ctx context.Context, originalURL string) (domain.Link, error)
-	ResolveShortLink(ctx context.Context, code string, event events.ClickEvent) (string, error)
+	ResolveShortLink(ctx context.Context, code string, clientIP string) (string, error)
 }
 
 func NewHTTPHandler(shortenerService Service) *Handler {

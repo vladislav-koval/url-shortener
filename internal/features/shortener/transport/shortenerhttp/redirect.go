@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/vladislav-koval/url-shortener/internal/core/logger"
-	"github.com/vladislav-koval/url-shortener/internal/core/messaging/events"
 	"github.com/vladislav-koval/url-shortener/internal/core/transport/http/request"
 	"github.com/vladislav-koval/url-shortener/internal/core/transport/http/response"
 )
@@ -20,9 +19,9 @@ func (h *Handler) Redirect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	event := events.NewClickEvent(shortCode, request.GetClientIP(r))
+	clientIP := request.GetClientIP(r)
 
-	originalURL, err := h.shortenerService.ResolveShortLink(r.Context(), shortCode, event)
+	originalURL, err := h.shortenerService.ResolveShortLink(r.Context(), shortCode, clientIP)
 
 	if err != nil {
 		responseHandler.ErrorResponse(err, "failed to get url")

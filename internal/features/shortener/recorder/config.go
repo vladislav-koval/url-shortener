@@ -17,7 +17,7 @@ func NewConfig() (Config, error) {
 	var config Config
 
 	if err := envconfig.Process("KAFKA", &config); err != nil {
-		return Config{}, fmt.Errorf("failed to process env shortener recorder config: %w", err)
+		return Config{}, fmt.Errorf("failed to process env kafka recorder config: %w", err)
 	}
 
 	return config, nil
@@ -26,7 +26,7 @@ func NewConfig() (Config, error) {
 func NewConfigMust() Config {
 	config, err := NewConfig()
 	if err != nil {
-		panic(fmt.Errorf("get shortener recorder config: %w", err))
+		panic(fmt.Errorf("get kafka recorder config: %w", err))
 	}
 
 	return config

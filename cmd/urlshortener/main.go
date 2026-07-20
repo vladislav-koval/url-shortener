@@ -8,13 +8,11 @@ import (
 	"syscall"
 
 	"github.com/vladislav-koval/url-shortener/internal/core/logger"
-	"github.com/vladislav-koval/url-shortener/internal/core/messaging/gokafka/segmentio"
+	"github.com/vladislav-koval/url-shortener/internal/core/messaging/kafka/segmentio"
 	"github.com/vladislav-koval/url-shortener/internal/core/repository/postgres/pool/pgx"
 	"github.com/vladislav-koval/url-shortener/internal/core/repository/redis/goredis"
 	"github.com/vladislav-koval/url-shortener/internal/core/transport/http/middleware"
 	"github.com/vladislav-koval/url-shortener/internal/core/transport/http/server"
-	"github.com/vladislav-koval/url-shortener/internal/features/analytics"
-	"github.com/vladislav-koval/url-shortener/internal/features/analytics/consumer"
 	"github.com/vladislav-koval/url-shortener/internal/features/shortener"
 	"github.com/vladislav-koval/url-shortener/internal/features/shortener/recorder"
 	"go.uber.org/zap"
@@ -43,11 +41,7 @@ func main() {
 	if err != nil {
 		log.Fatal("failed to init redis client", zap.Error(err))
 	}
-	defer func() {
-		if err := redisClient.Close(); err != nil {
-			log.Error("failed to close redis client", zap.Error(err))
-		}
-	}()
+	defer redisClient.Close()
 
 	log.Debug("initializing kafka click writer")
 	recorderConfig := recorder.NewConfigMust()
@@ -58,21 +52,7 @@ func main() {
 		recorderConfig.BatchTimeout,
 		log,
 	)
-	defer func() {
-		if err := clickWriter.Close(); err != nil {
-			log.Error("failed to close kafka click writer", zap.Error(err))
-		}
-	}()
-
-	clickConfig := consumer.NewConfigMust()
-	clickReader := segmentio.NewReader(segmentio.NewConfigMust(), clickConfig.Topic, "AnalyticsGroupId")
-
-	analytics.StartConsumer(ctx, pgxPool, clickReader, log, clickConfig.GorutinesCount)
-	defer func() {
-		if err := clickReader.Close(); err != nil {
-			log.Error("failed to close kafka click reader", zap.Error(err))
-		}
-	}()
+	defer clickWriter.Close()
 
 	log.Debug("initializing feature", zap.String("feature", "url shortener"))
 	shortenerModule := shortener.NewModule(pgxPool, redisClient, clickWriter)
