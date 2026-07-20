@@ -1,7 +1,7 @@
 package shortener
 
 import (
-	"github.com/vladislav-koval/url-shortener/internal/core/messaging/kafka"
+	"github.com/vladislav-koval/url-shortener/internal/core/messaging/gokafka"
 	"github.com/vladislav-koval/url-shortener/internal/core/repository/postgres/pool"
 	"github.com/vladislav-koval/url-shortener/internal/core/repository/redis"
 	"github.com/vladislav-koval/url-shortener/internal/features/shortener/recorder"
@@ -15,7 +15,7 @@ type Module struct {
 	Handler *shortenerhttp.Handler
 }
 
-func NewModule(pool pool.Pool, cache cache.Pool, clickWriter kafka.Writer) *Module {
+func NewModule(pool pool.Pool, cache cache.Pool, clickWriter gokafka.Writer) *Module {
 	shortenerRepository := cached.NewRepository(
 		cache,
 		cached.NewConfigMust(),
