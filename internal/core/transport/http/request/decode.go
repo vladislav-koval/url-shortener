@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/vladislav-koval/url-shortener/internal/core/errors"
+	"github.com/vladislav-koval/url-shortener/internal/core/apperrors"
 )
 
 var requestValidator = newValidator()

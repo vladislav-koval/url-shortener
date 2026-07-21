@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/vladislav-koval/url-shortener/internal/core/errors"
+	"github.com/vladislav-koval/url-shortener/internal/core/apperrors"
 )
 
 type Link struct {
