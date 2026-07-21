@@ -12,13 +12,14 @@ type Service struct {
 	clickRecorder       ClickRecorder
 }
 
+//go:generate mockgen -source=./service.go -destination=mocks/mock_service.go -package=mocks
 type Repository interface {
 	CreateShortLink(ctx context.Context, shortCode string, originalURL string) (domain.Link, error)
 	GetByShortCode(ctx context.Context, code string) (domain.Link, error)
 }
 
 type ClickRecorder interface {
-	RecordClick(ctx context.Context, clickEvent events.ClickEvent)
+	RecordClick(clickEvent events.ClickEvent)
 }
 
 func NewService(shortenerRepository Repository, clickRecorder ClickRecorder) *Service {

@@ -97,13 +97,13 @@ func (m *MockClickRecorder) EXPECT() *MockClickRecorderMockRecorder {
 }
 
 // RecordClick mocks base method.
-func (m *MockClickRecorder) RecordClick(ctx context.Context, clickEvent events.ClickEvent) {
+func (m *MockClickRecorder) RecordClick(clickEvent events.ClickEvent) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RecordClick", ctx, clickEvent)
+	m.ctrl.Call(m, "RecordClick", clickEvent)
 }
 
 // RecordClick indicates an expected call of RecordClick.
-func (mr *MockClickRecorderMockRecorder) RecordClick(ctx, clickEvent any) *gomock.Call {
+func (mr *MockClickRecorderMockRecorder) RecordClick(clickEvent any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RecordClick", reflect.TypeOf((*MockClickRecorder)(nil).RecordClick), ctx, clickEvent)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RecordClick", reflect.TypeOf((*MockClickRecorder)(nil).RecordClick), clickEvent)
 }
