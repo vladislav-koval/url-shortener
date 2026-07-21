@@ -32,4 +32,4 @@ jobs:
           
           TOTAL_COVERAGE=$(go tool cover -func=coverage.clean.out | grep total | awk '{print $3}')
           
-          echo "Всего покрыто (без учета /mocks): $TOTAL_COVERAGE" >> $GITHUB_STEP_SUMMARY
+          echo "Test coverage: $TOTAL_COVERAGE" >> $GITHUB_STEP_SUMMARY

@@ -7,12 +7,12 @@ import (
 	"github.com/vladislav-koval/url-shortener/internal/core/messaging/events"
 )
 
+//go:generate mockgen -source=./service.go -destination=mocks/mock_service.go -package=mocks
 type Service struct {
 	shortenerRepository Repository
 	clickRecorder       ClickRecorder
 }
 
-//go:generate mockgen -source=./service.go -destination=mocks/mock_service.go -package=mocks
 type Repository interface {
 	CreateShortLink(ctx context.Context, shortCode string, originalURL string) (domain.Link, error)
 	GetByShortCode(ctx context.Context, code string) (domain.Link, error)

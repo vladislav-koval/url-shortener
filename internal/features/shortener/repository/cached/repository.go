@@ -8,6 +8,7 @@ import (
 	cache "github.com/vladislav-koval/url-shortener/internal/core/repository/redis"
 )
 
+//go:generate mockgen -source=./repository.go -destination=mocks/mock_repository.go -package=mocks
 type UnderlyingRepository interface {
 	CreateShortLink(ctx context.Context, shortCode string, originalURL string) (domain.Link, error)
 	GetByShortCode(ctx context.Context, code string) (domain.Link, error)

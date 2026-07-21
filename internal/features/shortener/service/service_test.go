@@ -19,53 +19,56 @@ func initTest(t *testing.T) (*mocks.MockRepository, *mocks.MockClickRecorder, *S
 
 	repository := mocks.NewMockRepository(ctrl)
 	recorder := mocks.NewMockClickRecorder(ctrl)
-
 	svc := NewService(repository, recorder)
 
 	return repository, recorder, svc
-
 }
 
 func TestCreateShortLink(t *testing.T) {
-	tests := []struct {
+	const (
+		inputShortCode   = "shortCode"
+		inputOriginalURL = "http://google.com"
+	)
+
+	testCases := []struct {
 		name        string
 		originalURL string
-		setupMock   func(repo *mocks.MockRepository)
+		setupMock   func(repo *mocks.MockRepository, originalURL string)
 		wantLink    domain.Link
 		wantErr     error
 	}{
 		{
 			name:        "successful",
-			originalURL: "http://google.com",
-			setupMock: func(repo *mocks.MockRepository) {
+			originalURL: inputOriginalURL,
+			setupMock: func(repo *mocks.MockRepository, originalURL string) {
 				repo.EXPECT().
-					CreateShortLink(gomock.Any(), gomock.Any(), "http://google.com").
-					Return(domain.Link{ShortCode: "shortLink", OriginalURL: "http://google.com"}, nil).
+					CreateShortLink(gomock.Any(), gomock.Any(), originalURL).
+					Return(domain.Link{ShortCode: inputShortCode, OriginalURL: originalURL}, nil).
 					Times(1)
 			},
-			wantLink: domain.Link{ShortCode: "shortLink", OriginalURL: "http://google.com"},
+			wantLink: domain.Link{ShortCode: inputShortCode, OriginalURL: inputOriginalURL},
 		},
 		{
 			name:        "retry on conflict",
-			originalURL: "http://google.com",
-			setupMock: func(repo *mocks.MockRepository) {
+			originalURL: inputOriginalURL,
+			setupMock: func(repo *mocks.MockRepository, originalURL string) {
 				gomock.InOrder(
-					repo.EXPECT(). // первый вызов возвращает конфликт
-							CreateShortLink(gomock.Any(), gomock.Any(), "http://google.com").
-							Return(domain.Link{}, apperrors.ErrConflict),
-					repo.EXPECT(). // второй - успех
-							CreateShortLink(gomock.Any(), gomock.Any(), "http://google.com").
-							Return(domain.Link{ShortCode: "shortCode", OriginalURL: "http://google.com"}, nil),
+					repo.EXPECT().
+						CreateShortLink(gomock.Any(), gomock.Any(), originalURL).
+						Return(domain.Link{}, apperrors.ErrConflict),
+					repo.EXPECT().
+						CreateShortLink(gomock.Any(), gomock.Any(), originalURL).
+						Return(domain.Link{ShortCode: inputShortCode, OriginalURL: originalURL}, nil),
 				)
 			},
-			wantLink: domain.Link{ShortCode: "shortCode", OriginalURL: "http://google.com"},
+			wantLink: domain.Link{ShortCode: inputShortCode, OriginalURL: inputOriginalURL},
 		},
 		{
 			name:        "exhausted attempts",
-			originalURL: "http://google.com",
-			setupMock: func(repo *mocks.MockRepository) {
+			originalURL: inputOriginalURL,
+			setupMock: func(repo *mocks.MockRepository, originalURL string) {
 				repo.EXPECT().
-					CreateShortLink(gomock.Any(), gomock.Any(), "http://google.com").
+					CreateShortLink(gomock.Any(), gomock.Any(), originalURL).
 					Return(domain.Link{}, apperrors.ErrConflict).
 					Times(maxCreateLinkAttempts)
 			},
@@ -83,15 +86,13 @@ func TestCreateShortLink(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
+	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
 			repository, _, svc := initTest(t)
 
 			if tt.setupMock != nil {
-				tt.setupMock(repository)
+				tt.setupMock(repository, tt.originalURL)
 			}
-			// иначе setupMock не задан - значит для этого кейса репозиторий
-			// вообще не должен вызываться, и мок сам провалит тест, если это произойдёт
 
 			actual, err := svc.CreateShortLink(context.Background(), tt.originalURL)
 
@@ -104,69 +105,74 @@ func TestCreateShortLink(t *testing.T) {
 			assert.Equal(t, tt.wantLink, actual)
 		})
 	}
+
+	t.Run("generated code properties", func(t *testing.T) {
+		repo, _, svc := initTest(t)
+
+		repo.EXPECT().
+			CreateShortLink(gomock.Any(), gomock.Any(), inputOriginalURL).
+			DoAndReturn(func(ctx context.Context, code string, url string) (domain.Link, error) {
+				assert.Len(t, code, 7) // Хардкод длины защищает от случайного изменения константы
+
+				for _, char := range code {
+					assert.Contains(t, shortCodeAlphabet, string(char), "Код содержит недопустимый символ!")
+				}
+
+				return domain.Link{ShortCode: code, OriginalURL: url}, nil
+			}).
+			Times(1)
+
+		_, err := svc.CreateShortLink(context.Background(), inputOriginalURL)
+		assert.NoError(t, err)
+	})
 }
 
-func TestCreateShortLink_GeneratedCodeProperties(t *testing.T) {
-	repo, _, svs := initTest(t)
+func TestResolveShortLink(t *testing.T) {
+	const (
+		inputShortCode   = "shortCode"
+		inputOriginalURL = "http://google.com"
+		ip               = "127.0.0.1"
+	)
 
-	repo.EXPECT().
-		CreateShortLink(gomock.Any(), gomock.Any(), "http://google.com").
-		DoAndReturn(func(ctx context.Context, code string, url string) (domain.Link, error) {
+	t.Run("successful resolution and click recording", func(t *testing.T) {
+		repo, recorder, svc := initTest(t)
 
-			assert.Len(t, code, 7)
+		repo.EXPECT().
+			GetByShortCode(gomock.Any(), inputShortCode).
+			Return(domain.Link{
+				ShortCode:   inputShortCode,
+				OriginalURL: inputOriginalURL,
+			}, nil).
+			Times(1)
 
-			for _, char := range code {
-				assert.Contains(t, shortCodeAlphabet, string(char), "Код содержит недопустимый символ!")
-			}
+		event := events.NewClickEvent(inputShortCode, new(ip))
 
-			return domain.Link{ShortCode: code, OriginalURL: url}, nil
-		}).
-		Times(1)
+		recorder.EXPECT().
+			RecordClick(event).
+			Times(1)
 
-	_, err := svs.CreateShortLink(context.Background(), "http://google.com")
+		originalLink, err := svc.ResolveShortLink(context.Background(), inputShortCode, event)
 
-	assert.NoError(t, err)
-}
+		assert.NoError(t, err)
+		assert.Equal(t, inputOriginalURL, originalLink)
+	})
 
-func TestResolveShortLink_Successful(t *testing.T) {
-	repository, recorder, svc := initTest(t)
+	t.Run("short link not found", func(t *testing.T) {
+		repo, recorder, svc := initTest(t)
 
-	repository.EXPECT().
-		GetByShortCode(gomock.Any(), "shortCode").
-		Return(domain.Link{
-			ShortCode:   "shortCode",
-			OriginalURL: "http://google.com",
-		}, nil).
-		Times(1)
+		repo.EXPECT().
+			GetByShortCode(gomock.Any(), inputShortCode).
+			Return(domain.Link{}, apperrors.ErrNotFound).
+			Times(1)
 
-	event := events.NewClickEvent("shortCode", new("127.0.0.1"))
-	recorder.EXPECT().
-		RecordClick(event).
-		Return().
-		Times(1)
+		recorder.EXPECT().
+			RecordClick(gomock.Any()).
+			Times(0)
 
-	originalLink, err := svc.ResolveShortLink(context.Background(), "shortCode", event)
+		event := events.NewClickEvent(inputShortCode, new(ip))
+		originalLink, err := svc.ResolveShortLink(context.Background(), inputShortCode, event)
 
-	assert.NoError(t, err)
-	assert.Equal(t, "http://google.com", originalLink)
-}
-
-func TestResolveShortLink_ErrNotFound(t *testing.T) {
-	repository, recorder, svc := initTest(t)
-
-	repository.EXPECT().
-		GetByShortCode(gomock.Any(), "shortCode").
-		Return(domain.Link{}, apperrors.ErrNotFound).
-		Times(1)
-
-	recorder.EXPECT().
-		RecordClick(gomock.Any()).
-		Times(0)
-
-	event := events.NewClickEvent("shortCode", new("127.0.0.1"))
-	originalLink, err := svc.ResolveShortLink(context.Background(), "shortCode", event)
-
-	assert.ErrorIs(t, err, apperrors.ErrNotFound)
-	assert.Equal(t, "", originalLink)
-
+		assert.ErrorIs(t, err, apperrors.ErrNotFound)
+		assert.Equal(t, "", originalLink)
+	})
 }
