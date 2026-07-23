@@ -7,7 +7,7 @@ on:
     branches: [ main, master ]
 
 jobs:
-  test:
+  run-tests:
     name: Run tests
     runs-on: ubuntu-latest
     steps:
@@ -18,6 +18,18 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.26.1'
+          cache: true
 
       - name: Run go test
-        run: go test -v ./...
+        run: go test -v -coverprofile=coverage.out -covermode=atomic ./...
+
+      - name: Generate Coverage Report
+        run: |
+          echo "### Отчет по покрытию кода :test_tube:" >> $GITHUB_STEP_SUMMARY
+          
+          # Исключаем файлы автосгенерированных моков, чтобы они не занижали статистику
+          grep -v "/mocks" coverage.out > coverage.clean.out
+          
+          TOTAL_COVERAGE=$(go tool cover -func=coverage.clean.out | grep total | awk '{print $3}')
+          
+          echo "Всего покрыто (без учета /mocks): $TOTAL_COVERAGE" >> $GITHUB_STEP_SUMMARY
