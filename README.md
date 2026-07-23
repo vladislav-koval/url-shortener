@@ -34,27 +34,25 @@
 flowchart LR
     Client([Клиент])
 
-    subgraph Application["URL Shortener"]
+    subgraph Application["URL Shortener Application"]
         Shortener["Shortener API<br/>создание ссылок и редиректы"]
         Consumer["Analytics Consumer<br/>обработка переходов"]
     end
 
-    Redis[("Redis<br/>кеш ссылок")]
-    Kafka[/"Kafka topic<br/>click-events"/]
-
-    subgraph Postgres["PostgreSQL"]
-        Links[("links")]
-        Clicks[("click analytics")]
+    subgraph Infrastructure["Infrastructure"]
+        Redis[("Redis<br/>кеш ссылок")]
+        Kafka[/"Kafka topic<br/>click-events"/]
+        Postgres[("PostgreSQL<br/>ссылки и аналитика")]
     end
 
-    Client -->|"POST /links<br/>GET /:code"| Shortener
+    Client -->|"POST /link<br/>GET /{code}"| Shortener
 
-    Shortener -->|"создание ссылки<br/>чтение при cache miss"| Links
-    Shortener <-->|"чтение и заполнение кеша"| Redis
+    Shortener <-->|"кеширование ссылок"| Redis
+    Shortener -->|"сохранение и чтение ссылок"| Postgres
 
-    Shortener -.->|"публикация события клика"| Kafka
-    Kafka -->|"поток событий"| Consumer
-    Consumer -->|"сохранение аналитики"| Clicks
+    Shortener -.->|"событие перехода"| Kafka
+    Kafka -->|"события переходов"| Consumer
+    Consumer -->|"сохранение аналитики"| Postgres
 ```
 
 ## Стек
