@@ -7,6 +7,7 @@ import (
 	"github.com/vladislav-koval/url-shortener/internal/core/messaging/events"
 )
 
+//go:generate mockgen -source=./service.go -destination=mocks/mock_service.go -package=mocks
 type Service struct {
 	shortenerRepository Repository
 	clickRecorder       ClickRecorder
@@ -18,7 +19,7 @@ type Repository interface {
 }
 
 type ClickRecorder interface {
-	RecordClick(ctx context.Context, clickEvent events.ClickEvent)
+	RecordClick(clickEvent events.ClickEvent)
 }
 
 func NewService(shortenerRepository Repository, clickRecorder ClickRecorder) *Service {

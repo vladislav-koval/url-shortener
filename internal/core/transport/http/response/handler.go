@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/vladislav-koval/url-shortener/internal/core/errors"
+	"github.com/vladislav-koval/url-shortener/internal/core/apperrors"
 	"github.com/vladislav-koval/url-shortener/internal/core/logger"
 	"go.uber.org/zap"
 )

@@ -6,7 +6,7 @@ import (
 	"errors"
 	"time"
 
-	apperrors "github.com/vladislav-koval/url-shortener/internal/core/errors"
+	"github.com/vladislav-koval/url-shortener/internal/core/apperrors"
 	"github.com/vladislav-koval/url-shortener/internal/core/logger"
 	"github.com/vladislav-koval/url-shortener/internal/core/messaging/events"
 	"github.com/vladislav-koval/url-shortener/internal/core/messaging/gokafka"

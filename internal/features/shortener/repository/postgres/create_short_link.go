@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/vladislav-koval/url-shortener/internal/core/apperrors"
 	"github.com/vladislav-koval/url-shortener/internal/core/domain"
-	"github.com/vladislav-koval/url-shortener/internal/core/errors"
 	"github.com/vladislav-koval/url-shortener/internal/core/repository/postgres/pool"
 )
 

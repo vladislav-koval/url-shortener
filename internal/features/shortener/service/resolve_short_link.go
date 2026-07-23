@@ -13,7 +13,7 @@ func (s *Service) ResolveShortLink(ctx context.Context, code string, event event
 		return "", fmt.Errorf("get link from repo: %w", err)
 	}
 
-	s.clickRecorder.RecordClick(ctx, event)
+	s.clickRecorder.RecordClick(event)
 
 	return link.OriginalURL, nil
 }

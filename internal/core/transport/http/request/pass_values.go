@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/vladislav-koval/url-shortener/internal/core/errors"
+	"github.com/vladislav-koval/url-shortener/internal/core/apperrors"
 )
 
 func GetStringPathValue(r *http.Request, key string) (string, error) {

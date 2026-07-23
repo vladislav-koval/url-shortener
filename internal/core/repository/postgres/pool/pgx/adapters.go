@@ -9,6 +9,7 @@ import (
 	"github.com/vladislav-koval/url-shortener/internal/core/repository/postgres/pool"
 )
 
+//go:generate mockgen -destination=mocks/mock_pgx.go -package=mocks github.com/jackc/pgx/v5 Row,Rows
 type pgxRows struct {
 	pgx.Rows
 }

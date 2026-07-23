@@ -12,22 +12,21 @@ import (
 
 type Producer struct {
 	writer gokafka.Writer
+	log    *logger.Logger
 }
 
-func NewProducer(writer gokafka.Writer) *Producer {
-	return &Producer{writer: writer}
+func NewProducer(writer gokafka.Writer, log *logger.Logger) *Producer {
+	return &Producer{writer: writer, log: log}
 }
 
-func (r *Producer) RecordClick(ctx context.Context, clickEvent events.ClickEvent) {
-	log := logger.FromContext(ctx)
-
+func (p *Producer) RecordClick(clickEvent events.ClickEvent) {
 	value, err := json.Marshal(clickEvent)
 	if err != nil {
-		log.Error("marshal click event", zap.Error(err))
+		p.log.Error("marshal click event", zap.Error(err))
 		return
 	}
 
-	if err := r.writer.WriteMessage(ctx, []byte(clickEvent.ShortCode), value); err != nil {
-		log.Error("failed to write click event", zap.Error(err))
+	if err := p.writer.WriteMessage(context.Background(), []byte(clickEvent.ShortCode), value); err != nil {
+		p.log.Error("failed to write click event", zap.Error(err))
 	}
 }
