@@ -1,7 +1,6 @@
 package producer
 
 import (
-	"context"
 	"encoding/json"
 
 	"github.com/vladislav-koval/url-shortener/internal/core/logger"
@@ -26,7 +25,5 @@ func (p *Producer) RecordClick(clickEvent events.ClickEvent) {
 		return
 	}
 
-	if err := p.writer.WriteMessage(context.Background(), []byte(clickEvent.ShortCode), value); err != nil {
-		p.log.Error("failed to write click event", zap.Error(err))
-	}
+	p.writer.AsyncWriteMessage(gokafka.Message{Key: []byte(clickEvent.ShortCode), Value: value})
 }

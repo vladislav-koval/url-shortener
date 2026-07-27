@@ -14,18 +14,23 @@ import (
 )
 
 type HTTPServer struct {
-	mux         *http.ServeMux
-	config      Config
-	log         *logger.Logger
-	middlewares []middleware.Middleware
+	mux    *http.ServeMux
+	server *http.Server
+	config Config
+	log    *logger.Logger
 }
 
 func NewHTTPServer(config Config, log *logger.Logger, middlewares ...middleware.Middleware) *HTTPServer {
+	mux := http.NewServeMux()
+
 	return &HTTPServer{
-		mux:         http.NewServeMux(),
-		config:      config,
-		log:         log,
-		middlewares: middlewares,
+		mux: mux,
+		server: &http.Server{
+			Addr:    config.Addr,
+			Handler: middleware.ChainMiddlewares(mux, middlewares...),
+		},
+		config: config,
+		log:    log,
 	}
 }
 
@@ -37,63 +42,26 @@ func (s *HTTPServer) RegisterRoutes(routes ...Route) {
 	}
 }
 
-//func (s *HTTPServer) RegisterSwagger() {
-//	s.mux.Handle(
-//		"/swagger/",
-//		httpSwagger.Handler(
-//			httpSwagger.URL("/swagger/doc.json"),
-//			httpSwagger.DefaultModelsExpandDepth(-1),
-//		),
-//	)
-//
-//	s.mux.HandleFunc(
-//		"/swagger/doc.json",
-//		func(w http.ResponseWriter, r *http.Request) {
-//			w.Header().Set("Content-Type", "application/json")
-//			w.WriteHeader(http.StatusOK)
-//			_, _ = w.Write([]byte(docs.SwaggerInfo.ReadDoc()))
-//		})
-//
-//}
-
-func (s *HTTPServer) Run(ctx context.Context) error {
-	mux := middleware.ChainMiddlewares(s.mux, s.middlewares...)
-
-	server := &http.Server{
-		Addr:    s.config.Addr,
-		Handler: mux,
-	}
-
-	ch := make(chan error, 1)
-
+func (s *HTTPServer) Run() error {
 	s.log.Warn("starting http server", zap.String("addr", s.config.Addr))
 
-	go func() {
-		defer close(ch)
-		err := server.ListenAndServe()
-
-		if !errors.Is(err, http.ErrServerClosed) {
-			ch <- err
-		}
-	}()
-
-	select {
-	case err := <-ch:
+	if err := s.server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 		return fmt.Errorf("http server: %w", err)
-	case <-ctx.Done():
-		s.log.Warn("shutdown http server", zap.String("addr", s.config.Addr))
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), s.config.ShutdownTimeout)
-
-		defer cancel()
-
-		if err := server.Shutdown(shutdownCtx); err != nil {
-			_ = server.Close()
-
-			return fmt.Errorf("shutdown http server: %w", err)
-		}
-
-		s.log.Warn("http server stopped", zap.String("addr", s.config.Addr))
-
-		return nil
 	}
+
+	return nil
+}
+
+func (s *HTTPServer) Shutdown(ctx context.Context) error {
+	s.log.Warn("shutdown http server", zap.String("addr", s.config.Addr))
+
+	if err := s.server.Shutdown(ctx); err != nil {
+		_ = s.server.Close()
+
+		return fmt.Errorf("shutdown http server: %w", err)
+	}
+
+	s.log.Warn("http server stopped", zap.String("addr", s.config.Addr))
+
+	return nil
 }

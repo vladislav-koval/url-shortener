@@ -8,9 +8,11 @@ import (
 )
 
 type Config struct {
-	Topic        string
-	BatchSize    int
-	BatchTimeout time.Duration
+	Topic         string
+	BatchSize     int
+	QueueSize     int
+	FlushInterval time.Duration
+	WriteTimeout  time.Duration
 }
 
 type topicConfig struct {
@@ -18,8 +20,10 @@ type topicConfig struct {
 }
 
 type producerOnlyConfig struct {
-	BatchSize    int           `envconfig:"BATCH_SIZE" required:"true"`
-	BatchTimeout time.Duration `envconfig:"BATCH_TIMEOUT" required:"true"`
+	BatchSize     int           `envconfig:"BATCH_SIZE" required:"true"`
+	QueueSize     int           `envconfig:"QUEUE_SIZE" required:"true"`
+	FlushInterval time.Duration `envconfig:"FLUSH_INTERVAL" required:"true"`
+	WriteTimeout  time.Duration `envconfig:"WRITE_TIMEOUT" required:"true"`
 }
 
 func NewConfig() (Config, error) {
@@ -34,9 +38,11 @@ func NewConfig() (Config, error) {
 	}
 
 	return Config{
-		Topic:        topic.Topic,
-		BatchSize:    producerCfg.BatchSize,
-		BatchTimeout: producerCfg.BatchTimeout,
+		Topic:         topic.Topic,
+		BatchSize:     producerCfg.BatchSize,
+		QueueSize:     producerCfg.QueueSize,
+		FlushInterval: producerCfg.FlushInterval,
+		WriteTimeout:  producerCfg.WriteTimeout,
 	}, nil
 }
 
