@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -57,15 +58,31 @@ func NewClickConsumer(
 	}
 }
 
-func (p *ClickConsumer) Run() error {
+func (p *ClickConsumer) Run() (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			p.log.RecoverPanic("analytics consumer run loop", r)
+			err = fmt.Errorf("recovered from panic: %v", r)
+		}
+	}()
+
 	msgChannel := make(chan gokafka.Message, p.batchSize)
 
 	var fetching sync.WaitGroup
 	fetching.Add(1)
 
+	var fetchErr error
+
 	go func() {
 		defer fetching.Done()
 		defer close(msgChannel)
+
+		defer func() {
+			if r := recover(); r != nil {
+				p.log.RecoverPanic("analytics consumer fetch loop", r)
+				fetchErr = fmt.Errorf("recovered from panic while fetching: %v", r)
+			}
+		}()
 
 		for {
 			msg, err := p.reader.FetchMessage(p.fetchCtx)
@@ -89,7 +106,10 @@ func (p *ClickConsumer) Run() error {
 		}
 	}()
 
-	defer fetching.Wait()
+	defer func() {
+		p.cancelFetch()
+		fetching.Wait()
+	}()
 
 	batch := make([]events.ClickEvent, 0, p.batchSize)
 	kafkaMessages := make([]gokafka.Message, 0, p.batchSize)
@@ -111,6 +131,10 @@ func (p *ClickConsumer) Run() error {
 
 		case msg, ok := <-msgChannel:
 			if !ok {
+				if fetchErr != nil {
+					return fetchErr
+				}
+
 				p.shutdownFlush(batch, kafkaMessages)
 				p.log.Warn("analytics consumer stopped")
 				return nil

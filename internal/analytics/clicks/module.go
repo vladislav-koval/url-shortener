@@ -9,18 +9,19 @@ import (
 )
 
 type Module struct {
-	Consumer *consumer.ClickConsumer
+	Consumers []*consumer.ClickConsumer
 }
 
-// NewModule собирает консьюмера, но не запускает его: количеством горутин и их
-// жизненным циклом владеет точка сборки (main.go) — только она знает, когда
-// можно закрывать пул Postgres и reader. Конфиг приходит снаружи по той же
-// причине, по которой сюда не передаётся ctx: модуль не решает, как его
-// запускать, и не читает окружение сам.
-func NewModule(pool pool.Pool, reader gokafka.Reader, log *logger.Logger, cfg consumer.Config) *Module {
+// NewModule По одному консьюмеру на каждый переданный reader
+func NewModule(pool pool.Pool, readers []gokafka.Reader, log *logger.Logger, cfg consumer.Config) *Module {
 	repository := postgres.NewRepository(pool)
 
+	consumers := make([]*consumer.ClickConsumer, len(readers))
+	for i, reader := range readers {
+		consumers[i] = consumer.NewClickConsumer(reader, repository, log, cfg)
+	}
+
 	return &Module{
-		Consumer: consumer.NewClickConsumer(reader, repository, log, cfg),
+		Consumers: consumers,
 	}
 }

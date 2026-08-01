@@ -88,6 +88,12 @@ func NewWriter(cfg Config, writerCfg WriterConfig, log *logger.Logger) *Writer {
 func (w *Writer) reportDropped() {
 	defer w.wg.Done()
 
+	defer func() {
+		if p := recover(); p != nil {
+			w.log.RecoverPanic("kafka writer report dropped", p)
+		}
+	}()
+
 	ticker := time.NewTicker(dropReportInterval)
 	defer ticker.Stop()
 
@@ -111,10 +117,17 @@ func (w *Writer) reportDropped() {
 func (w *Writer) run() {
 	defer w.wg.Done()
 
+	batch := make([]kafka.Message, 0, w.batchSize)
+
+	defer func() {
+		if p := recover(); p != nil {
+			w.dropped.Add(uint64(len(batch)))
+			w.log.RecoverPanic("kafka writer run loop", p, zap.Int("messages", len(batch)))
+		}
+	}()
+
 	ticker := time.NewTicker(w.flushInterval)
 	defer ticker.Stop()
-
-	batch := make([]kafka.Message, 0, w.batchSize)
 
 	flush := func(ctx context.Context) {
 		if len(batch) == 0 {

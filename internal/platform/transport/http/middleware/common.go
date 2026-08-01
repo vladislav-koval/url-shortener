@@ -29,7 +29,7 @@ func CORS(allowedOriginsList []string) Middleware {
 			}
 
 			if r.Method == http.MethodOptions {
-				w.WriteHeader(http.StatusOK)
+				w.WriteHeader(http.StatusNoContent)
 				return
 			}
 

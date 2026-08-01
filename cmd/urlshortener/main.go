@@ -6,10 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
-	"github.com/vladislav-koval/url-shortener/internal/analytics/clicks"
-	"github.com/vladislav-koval/url-shortener/internal/analytics/clicks/consumer"
 	"github.com/vladislav-koval/url-shortener/internal/platform/logger"
 	"github.com/vladislav-koval/url-shortener/internal/platform/messaging/gokafka/segmentio"
 	"github.com/vladislav-koval/url-shortener/internal/platform/repository/postgres/pool/pgx"
@@ -20,7 +17,6 @@ import (
 	"github.com/vladislav-koval/url-shortener/internal/shortener/urls"
 	"github.com/vladislav-koval/url-shortener/internal/shortener/urls/producer"
 	"go.uber.org/zap"
-	"golang.org/x/sync/errgroup"
 )
 
 func main() {
@@ -60,13 +56,6 @@ func main() {
 		log,
 	)
 
-	log.Debug("initializing kafka click reader")
-	clickConfig := consumer.NewConfigMust()
-	clickReader := segmentio.NewReader(segmentio.NewConfigMust(), clickConfig.Topic, "AnalyticsGroupId")
-
-	log.Debug("initializing feature", zap.String("feature", "analytics"))
-	analyticsModule := clicks.NewModule(pgxPool, clickReader, log, clickConfig)
-
 	log.Debug("initializing feature", zap.String("feature", "url shortener"))
 	shortenerModule := urls.NewModule(pgxPool, redisClient, clickWriter, log)
 
@@ -84,67 +73,28 @@ func main() {
 
 	httpServer.RegisterRoutes(shortenerModule.Handler.Routes()...)
 
-	g, groupCtx := errgroup.WithContext(ctx)
-
-	for i := 0; i < clickConfig.GoroutinesCount; i++ {
-		g.Go(analyticsModule.Consumer.Run)
-	}
-
-	g.Go(httpServer.Run)
-
-	var groupErr error
-
-	stopped := make(chan struct{})
-	go func() {
-		groupErr = g.Wait()
-		close(stopped)
-	}()
-
-	<-groupCtx.Done()
-
-	shutdownStart := time.Now()
-
-	if ctx.Err() != nil {
-		log.Warn("shutdown signal received")
-	} else {
-		log.Warn("background component failed, shutting down")
-	}
-
-	shutdownCtx, cancelShutdown := context.WithTimeout(context.Background(), shutdown.NewConfigMust().Timeout)
-	defer cancelShutdown()
-
-	analyticsModule.Consumer.Shutdown(shutdownCtx)
-
-	if err := httpServer.Shutdown(shutdownCtx); err != nil {
-		log.Error("failed to shutdown http server", zap.Error(err))
-	}
-
-	select {
-	case <-stopped:
-		if groupErr != nil {
-			log.Error("background component stopped with error", zap.Error(groupErr))
-		}
-
-	case <-shutdownCtx.Done():
-		log.Error("shutdown budget exceeded, exiting without closing resources",
-			zap.Duration("took", time.Since(shutdownStart)))
-
-		return
-	}
-
-	if err := clickWriter.Shutdown(shutdownCtx); err != nil {
-		log.Error("failed to shutdown kafka click writer", zap.Error(err))
-	}
-
-	if err := clickReader.Close(); err != nil {
-		log.Error("failed to close kafka click reader", zap.Error(err))
-	}
-
-	if err := redisClient.Close(); err != nil {
-		log.Error("failed to close redis client", zap.Error(err))
-	}
-
-	pgxPool.Close()
-
-	log.Warn("shutdown complete", zap.Duration("took", time.Since(shutdownStart)))
+	shutdown.Run(
+		ctx,
+		log,
+		shutdown.NewConfigMust().Timeout,
+		[]func() error{httpServer.Run},
+		func(shutdownCtx context.Context) {
+			if err := httpServer.Shutdown(shutdownCtx); err != nil {
+				log.Error("failed to shutdown http server", zap.Error(err))
+			}
+		},
+		func(shutdownCtx context.Context) {
+			if err := clickWriter.Shutdown(shutdownCtx); err != nil {
+				log.Error("failed to shutdown kafka click writer", zap.Error(err))
+			}
+		},
+		func(context.Context) {
+			if err := redisClient.Close(); err != nil {
+				log.Error("failed to close redis client", zap.Error(err))
+			}
+		},
+		func(context.Context) {
+			pgxPool.Close()
+		},
+	)
 }

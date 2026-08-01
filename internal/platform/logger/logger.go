@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"time"
 
 	"go.uber.org/zap"
@@ -92,4 +93,19 @@ func (l *Logger) Close() {
 	if err := l.file.Close(); err != nil {
 		fmt.Println("failed to close log file: ", err)
 	}
+}
+
+// RecoverPanic логирует уже пойманную (через recover()) панику вместе со стеком.
+// Не вызывает recover() сама — вызывающая сторона решает, что делать после:
+// сбросить и продолжить свой цикл, остановить только себя или вернуть ошибку
+// выше. debug.Stack() тут, а не в вызывающем коде, чтобы каждый call site не
+// повторял этот импорт — вызывать её нужно всё равно строго во время обработки
+// той же самой паники (внутри defer/recover), иначе стек будет уже не тот.
+func (l *Logger) RecoverPanic(component string, p any, fields ...zap.Field) {
+	allFields := append(
+		[]zap.Field{zap.String("component", component), zap.Any("panic", p), zap.String("stack", string(debug.Stack()))},
+		fields...,
+	)
+
+	l.Error("recovered from panic", allFields...)
 }
