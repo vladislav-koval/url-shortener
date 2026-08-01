@@ -8,17 +8,17 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/vladislav-koval/url-shortener/internal/core/logger"
-	"github.com/vladislav-koval/url-shortener/internal/core/messaging/gokafka/segmentio"
-	"github.com/vladislav-koval/url-shortener/internal/core/repository/postgres/pool/pgx"
-	"github.com/vladislav-koval/url-shortener/internal/core/repository/redis/goredis"
-	"github.com/vladislav-koval/url-shortener/internal/core/shutdown"
-	"github.com/vladislav-koval/url-shortener/internal/core/transport/http/middleware"
-	"github.com/vladislav-koval/url-shortener/internal/core/transport/http/server"
-	"github.com/vladislav-koval/url-shortener/internal/features/analytics"
-	"github.com/vladislav-koval/url-shortener/internal/features/analytics/consumer"
-	"github.com/vladislav-koval/url-shortener/internal/features/shortener"
-	"github.com/vladislav-koval/url-shortener/internal/features/shortener/producer"
+	"github.com/vladislav-koval/url-shortener/internal/analytics/clicks"
+	"github.com/vladislav-koval/url-shortener/internal/analytics/clicks/consumer"
+	"github.com/vladislav-koval/url-shortener/internal/platform/logger"
+	"github.com/vladislav-koval/url-shortener/internal/platform/messaging/gokafka/segmentio"
+	"github.com/vladislav-koval/url-shortener/internal/platform/repository/postgres/pool/pgx"
+	"github.com/vladislav-koval/url-shortener/internal/platform/repository/redis/goredis"
+	"github.com/vladislav-koval/url-shortener/internal/platform/shutdown"
+	"github.com/vladislav-koval/url-shortener/internal/platform/transport/http/middleware"
+	"github.com/vladislav-koval/url-shortener/internal/platform/transport/http/server"
+	"github.com/vladislav-koval/url-shortener/internal/shortener/urls"
+	"github.com/vladislav-koval/url-shortener/internal/shortener/urls/producer"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 )
@@ -65,10 +65,10 @@ func main() {
 	clickReader := segmentio.NewReader(segmentio.NewConfigMust(), clickConfig.Topic, "AnalyticsGroupId")
 
 	log.Debug("initializing feature", zap.String("feature", "analytics"))
-	analyticsModule := analytics.NewModule(pgxPool, clickReader, log, clickConfig)
+	analyticsModule := clicks.NewModule(pgxPool, clickReader, log, clickConfig)
 
 	log.Debug("initializing feature", zap.String("feature", "url shortener"))
-	shortenerModule := shortener.NewModule(pgxPool, redisClient, clickWriter, log)
+	shortenerModule := urls.NewModule(pgxPool, redisClient, clickWriter, log)
 
 	log.Debug("initializing HTTP server")
 	httpConfig := server.NewConfigMust()
