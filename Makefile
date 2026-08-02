@@ -12,6 +12,10 @@ run:
 	@go mod tidy && \
 	go run cmd/urlshortener/main.go
 
+run-analytics:
+	@go mod tidy && \
+	go run cmd/analytics/main.go
+
 env-up:
 	@docker-compose up -d
 
