@@ -37,6 +37,11 @@ func (c *Redis) Get(ctx context.Context, key string) cache.StringCmd {
 	return goredisStringCmd{cmd}
 }
 
+func (c *Redis) Del(ctx context.Context, keys ...string) cache.IntCmd {
+	cmd := c.client.Del(ctx, keys...)
+	return goredisIntCmd{cmd}
+}
+
 func (c *Redis) Close() error {
 	return c.client.Close()
 }

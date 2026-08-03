@@ -1,33 +1,31 @@
-package shortenerhttp
+package authhttp
 
 import (
 	"context"
 	"time"
 
-	"golang.org/x/oauth2"
-
 	"github.com/vladislav-koval/url-shortener/internal/platform/transport/http/server"
 )
 
 type Handler struct {
-	authService         Service
-	googleOAuth         *oauth2.Config
-	cookieSecure        bool
-	successRedirectURL  string
-	sessionCookieMaxAge time.Duration
+	authService        Service
+	cookieSecure       bool
+	successRedirectURL string
+	cookieTTL          time.Duration
 }
 
 type Service interface {
 	LoginWithGoogle(ctx context.Context, code string, verifier string) (sessionToken string, err error)
+	AuthCodeURL(state, verifier string) string
+	Logout(ctx context.Context, rawToken string)
 }
 
-func NewHTTPHandler(authService Service, googleOAuth *oauth2.Config, cfg Config) *Handler {
+func NewHTTPHandler(authService Service, cfg Config) *Handler {
 	return &Handler{
-		authService:         authService,
-		googleOAuth:         googleOAuth,
-		cookieSecure:        cfg.CookieSecure,
-		successRedirectURL:  cfg.SuccessRedirectURL,
-		sessionCookieMaxAge: cfg.SessionCookieTTL,
+		authService:        authService,
+		cookieSecure:       cfg.CookieSecure,
+		successRedirectURL: cfg.SuccessRedirectURL,
+		cookieTTL:          cfg.SessionTTL,
 	}
 }
 
@@ -42,6 +40,11 @@ func (h *Handler) Routes() []server.Route {
 			Method:  "GET",
 			Path:    "/auth/google/callback",
 			Handler: h.GoogleCallback,
+		},
+		{
+			Method:  "POST",
+			Path:    "/auth/logout",
+			Handler: h.Logout,
 		},
 	}
 }

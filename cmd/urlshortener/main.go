@@ -61,7 +61,7 @@ func main() {
 	shortenerModule := urls.NewModule(pgxPool, redisClient, clickWriter, log)
 
 	log.Debug("initializing feature", zap.String("feature", "auth"))
-	authModule := auth.NewModule(pgxPool)
+	authModule := auth.NewModule(pgxPool, redisClient)
 
 	log.Debug("initializing HTTP server")
 	httpConfig := server.NewConfigMust()

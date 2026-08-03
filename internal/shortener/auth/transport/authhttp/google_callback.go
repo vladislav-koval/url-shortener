@@ -1,10 +1,9 @@
-package shortenerhttp
+package authhttp
 
 import (
 	"crypto/subtle"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/vladislav-koval/url-shortener/internal/platform/apperrors"
 	"github.com/vladislav-koval/url-shortener/internal/platform/logger"
@@ -60,33 +59,4 @@ func (h *Handler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 	h.setSessionCookie(w, sessionToken)
 
 	responseHandler.RedirectResponse(r, h.successRedirectURL)
-}
-
-func (h *Handler) clearOAuthCookies(w http.ResponseWriter) {
-	expire := func(name string) {
-		http.SetCookie(w, &http.Cookie{
-			Name:     name,
-			Value:    "",
-			Path:     "/auth/google",
-			MaxAge:   -1,
-			HttpOnly: true,
-			Secure:   h.cookieSecure,
-			SameSite: http.SameSiteLaxMode,
-		})
-	}
-
-	expire(stateCookieName)
-	expire(verifierCookieName)
-}
-
-func (h *Handler) setSessionCookie(w http.ResponseWriter, sessionToken string) {
-	http.SetCookie(w, &http.Cookie{
-		Name:     sessionCookieName,
-		Value:    sessionToken,
-		Path:     "/",
-		MaxAge:   int(h.sessionCookieMaxAge / time.Second),
-		HttpOnly: true,
-		Secure:   h.cookieSecure,
-		SameSite: http.SameSiteLaxMode,
-	})
 }

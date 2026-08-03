@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"golang.org/x/oauth2"
+	googleoauth "golang.org/x/oauth2/google"
 	"google.golang.org/api/idtoken"
 
 	"github.com/vladislav-koval/url-shortener/internal/shortener/auth/domain"
@@ -17,8 +18,16 @@ type Provider struct {
 	oauthConfig *oauth2.Config
 }
 
-func NewProvider(oauthConfig *oauth2.Config) *Provider {
-	return &Provider{oauthConfig: oauthConfig}
+func NewProvider(cfg Config) *Provider {
+	googleOAuth := &oauth2.Config{
+		ClientID:     cfg.GoogleClientID,
+		ClientSecret: cfg.GoogleClientSecret,
+		RedirectURL:  cfg.GoogleCallbackURL,
+		Scopes:       []string{"openid", "email", "profile"},
+		Endpoint:     googleoauth.Endpoint,
+	}
+
+	return &Provider{oauthConfig: googleOAuth}
 }
 
 func (p *Provider) Exchange(ctx context.Context, code string, verifier string) (domain.GoogleIdentity, error) {
@@ -47,4 +56,11 @@ func (p *Provider) Exchange(ctx context.Context, code string, verifier string) (
 		EmailVerified: emailVerified,
 		Name:          name,
 	}, nil
+}
+
+func (p *Provider) AuthCodeURL(state string, verifier string) string {
+	return p.oauthConfig.AuthCodeURL(
+		state,
+		oauth2.S256ChallengeOption(verifier),
+	)
 }

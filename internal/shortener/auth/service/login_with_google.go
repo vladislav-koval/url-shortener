@@ -13,24 +13,29 @@ import (
 // google_sub) и выдаёт сессионный токен. code/verifier уже провалидированы
 // транспортом (state/cookie — HTTP-специфика запроса), сюда приходят как
 // обычные строки.
-func (s *Service) LoginWithGoogle(ctx context.Context, code string, verifier string) (string, error) {
+func (s *AuthService) LoginWithGoogle(ctx context.Context, code string, verifier string) (string, error) {
 	identity, err := s.identityProvider.Exchange(ctx, code, verifier)
 	if err != nil {
 		return "", fmt.Errorf("exchange google identity: %w", err)
+	}
+
+	if identity.Sub == "" || identity.Email == "" {
+		return "", fmt.Errorf("google identity is incomplete: %w", apperrors.ErrAuthorization)
 	}
 
 	if !identity.EmailVerified {
 		return "", fmt.Errorf("google email %q is not verified: %w", identity.Email, apperrors.ErrAuthorization)
 	}
 
-	user, err := s.repository.UpsertUser(ctx, domain.NewUser(identity))
+	user, err := s.userRepository.UpsertUser(ctx, domain.NewUser(identity))
 	if err != nil {
 		return "", fmt.Errorf("upsert user: %w", err)
 	}
 
-	sessionToken, err := s.sessionIssuer.Issue(user.ID)
+	sessionToken, err := s.sessionManager.Create(ctx, user.ID)
+
 	if err != nil {
-		return "", fmt.Errorf("issue session token: %w", err)
+		return "", fmt.Errorf("create sessionstorage: %w", err)
 	}
 
 	return sessionToken, nil

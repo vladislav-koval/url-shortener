@@ -1,39 +1,39 @@
 package auth
 
 import (
-	"golang.org/x/oauth2"
-	googleoauth "golang.org/x/oauth2/google"
-
 	"github.com/vladislav-koval/url-shortener/internal/platform/repository/postgres/pool"
+	"github.com/vladislav-koval/url-shortener/internal/platform/repository/redis"
 	"github.com/vladislav-koval/url-shortener/internal/shortener/auth/identity/google"
 	"github.com/vladislav-koval/url-shortener/internal/shortener/auth/repository/postgres"
+	"github.com/vladislav-koval/url-shortener/internal/shortener/auth/repository/sessionstorage"
 	"github.com/vladislav-koval/url-shortener/internal/shortener/auth/service"
 	"github.com/vladislav-koval/url-shortener/internal/shortener/auth/session"
-	"github.com/vladislav-koval/url-shortener/internal/shortener/auth/transport/shortenerhttp"
+	"github.com/vladislav-koval/url-shortener/internal/shortener/auth/transport/authhttp"
 )
 
 type Module struct {
-	Handler *shortenerhttp.Handler
+	Handler *authhttp.Handler
 }
 
-func NewModule(pool pool.Pool) *Module {
-	httpCfg := shortenerhttp.NewConfigMust()
-	sessionCfg := session.NewConfigMust()
+func NewModule(pool pool.Pool, cache cache.Pool) *Module {
+	httpCfg := authhttp.NewConfigMust()
 
-	googleOAuth := &oauth2.Config{
-		ClientID:     httpCfg.GoogleClientID,
-		ClientSecret: httpCfg.GoogleClientSecret,
-		RedirectURL:  httpCfg.GoogleRedirectURL,
-		Scopes:       []string{"openid", "email", "profile"},
-		Endpoint:     googleoauth.Endpoint,
-	}
+	userRepository := postgres.NewUserRepository(pool)
 
-	authRepository := postgres.NewRepository(pool)
-	identityProvider := google.NewProvider(googleOAuth)
-	sessionIssuer := session.NewIssuer(sessionCfg)
+	sessionRepository := sessionstorage.NewRepository(cache)
+	sessionService := session.NewSessionService(sessionRepository, httpCfg.SessionTTL)
 
-	authService := service.NewService(authRepository, identityProvider, sessionIssuer)
-	authHTTPHandler := shortenerhttp.NewHTTPHandler(authService, googleOAuth, httpCfg)
+	googleCfg := google.NewConfigMust()
+
+	identityProvider := google.NewProvider(googleCfg)
+
+	authService := service.NewAuthService(
+		identityProvider,
+		userRepository,
+		sessionService,
+	)
+
+	authHTTPHandler := authhttp.NewHTTPHandler(authService, httpCfg)
 
 	return &Module{
 		Handler: authHTTPHandler,
