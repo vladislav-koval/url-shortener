@@ -31,18 +31,18 @@ type SessionManager interface {
 }
 
 //go:generate mockgen -source=./service.go -destination=mocks/mock_service.go -package=mocks
-type AuthService struct {
+type Service struct {
 	identityProvider IdentityProvider
 	userRepository   UserRepository
 	sessionManager   SessionManager
 }
 
-func NewAuthService(
+func NewService(
 	identityProvider IdentityProvider,
 	userRepository UserRepository,
 	sessionManager SessionManager,
-) *AuthService {
-	return &AuthService{
+) *Service {
+	return &Service{
 		identityProvider: identityProvider,
 		userRepository:   userRepository,
 		sessionManager:   sessionManager,

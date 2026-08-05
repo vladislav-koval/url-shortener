@@ -11,7 +11,7 @@ import (
 	"github.com/vladislav-koval/url-shortener/internal/shortener/auth/domain"
 )
 
-type SessionRepository interface {
+type Repository interface {
 	Save(
 		ctx context.Context,
 		tokenHash string,
@@ -20,19 +20,21 @@ type SessionRepository interface {
 	) error
 
 	Delete(ctx context.Context, tokenHash string)
+
+	Get(ctx context.Context, tokenHash string) (domain.Session, error)
 }
 
 //go:generate mockgen -source=./service.go -destination=mocks/mock_service.go -package=mocks
-type SessionService struct {
-	repository SessionRepository
+type Service struct {
+	repository Repository
 	ttl        time.Duration
 }
 
-func NewSessionService(
-	repository SessionRepository,
+func NewService(
+	repository Repository,
 	ttl time.Duration,
-) *SessionService {
-	return &SessionService{
+) *Service {
+	return &Service{
 		repository: repository,
 		ttl:        ttl,
 	}

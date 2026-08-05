@@ -2,7 +2,7 @@ package session
 
 import "context"
 
-func (s *SessionService) Delete(
+func (s *Service) Delete(
 	ctx context.Context,
 	rawToken string,
 ) {

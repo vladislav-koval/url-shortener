@@ -14,7 +14,7 @@ import (
 	"github.com/vladislav-koval/url-shortener/internal/shortener/auth/service/mocks"
 )
 
-func initTest(t *testing.T) (*mocks.MockIdentityProvider, *mocks.MockUserRepository, *mocks.MockSessionManager, *AuthService) {
+func initTest(t *testing.T) (*mocks.MockIdentityProvider, *mocks.MockUserRepository, *mocks.MockSessionManager, *Service) {
 	t.Helper()
 
 	ctrl := gomock.NewController(t)
@@ -23,7 +23,7 @@ func initTest(t *testing.T) (*mocks.MockIdentityProvider, *mocks.MockUserReposit
 	userRepository := mocks.NewMockUserRepository(ctrl)
 	sessionManager := mocks.NewMockSessionManager(ctrl)
 
-	svc := NewAuthService(identityProvider, userRepository, sessionManager)
+	svc := NewService(identityProvider, userRepository, sessionManager)
 
 	return identityProvider, userRepository, sessionManager, svc
 }

@@ -14,13 +14,13 @@ import (
 	"github.com/vladislav-koval/url-shortener/internal/shortener/auth/session/mocks"
 )
 
-func initTest(t *testing.T, ttl time.Duration) (*mocks.MockSessionRepository, *SessionService) {
+func initTest(t *testing.T, ttl time.Duration) (*mocks.MockRepository, *Service) {
 	t.Helper()
 
 	ctrl := gomock.NewController(t)
 
-	repository := mocks.NewMockSessionRepository(ctrl)
-	svc := NewSessionService(repository, ttl)
+	repository := mocks.NewMockRepository(ctrl)
+	svc := NewService(repository, ttl)
 
 	return repository, svc
 }

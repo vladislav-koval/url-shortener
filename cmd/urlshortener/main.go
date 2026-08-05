@@ -75,7 +75,7 @@ func main() {
 		middleware.Panic(),
 	)
 
-	httpServer.RegisterRoutes(shortenerModule.Handler.Routes()...)
+	httpServer.RegisterRoutes(shortenerModule.Handler.Routes(authModule.SessionResolver)...)
 	httpServer.RegisterRoutes(authModule.Handler.Routes()...)
 
 	shutdown.Run(

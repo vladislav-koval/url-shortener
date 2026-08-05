@@ -1,6 +1,10 @@
 package authhttp
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/vladislav-koval/url-shortener/internal/platform/authorization"
+)
 
 const deleteCookieMaxAge = -1
 
@@ -29,9 +33,9 @@ func (h *Handler) clearOAuthCookies(w http.ResponseWriter) {
 }
 
 func (h *Handler) setSessionCookie(w http.ResponseWriter, sessionToken string) {
-	http.SetCookie(w, h.cookie(sessionCookieName, sessionToken, rootCookiePath, int(h.cookieTTL.Seconds())))
+	http.SetCookie(w, h.cookie(authorization.SessionCookieName, sessionToken, rootCookiePath, int(h.cookieTTL.Seconds())))
 }
 
 func (h *Handler) clearSessionCookie(w http.ResponseWriter) {
-	http.SetCookie(w, h.cookie(sessionCookieName, "", rootCookiePath, deleteCookieMaxAge))
+	http.SetCookie(w, h.cookie(authorization.SessionCookieName, "", rootCookiePath, deleteCookieMaxAge))
 }

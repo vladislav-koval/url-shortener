@@ -18,44 +18,44 @@ import (
 	gomock "go.uber.org/mock/gomock"
 )
 
-// MockSessionRepository is a mock of SessionRepository interface.
-type MockSessionRepository struct {
+// MockRepository is a mock of Repository interface.
+type MockRepository struct {
 	ctrl     *gomock.Controller
-	recorder *MockSessionRepositoryMockRecorder
+	recorder *MockRepositoryMockRecorder
 	isgomock struct{}
 }
 
-// MockSessionRepositoryMockRecorder is the mock recorder for MockSessionRepository.
-type MockSessionRepositoryMockRecorder struct {
-	mock *MockSessionRepository
+// MockRepositoryMockRecorder is the mock recorder for MockRepository.
+type MockRepositoryMockRecorder struct {
+	mock *MockRepository
 }
 
-// NewMockSessionRepository creates a new mock instance.
-func NewMockSessionRepository(ctrl *gomock.Controller) *MockSessionRepository {
-	mock := &MockSessionRepository{ctrl: ctrl}
-	mock.recorder = &MockSessionRepositoryMockRecorder{mock}
+// NewMockRepository creates a new mock instance.
+func NewMockRepository(ctrl *gomock.Controller) *MockRepository {
+	mock := &MockRepository{ctrl: ctrl}
+	mock.recorder = &MockRepositoryMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockSessionRepository) EXPECT() *MockSessionRepositoryMockRecorder {
+func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 	return m.recorder
 }
 
 // Delete mocks base method.
-func (m *MockSessionRepository) Delete(ctx context.Context, tokenHash string) {
+func (m *MockRepository) Delete(ctx context.Context, tokenHash string) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "Delete", ctx, tokenHash)
 }
 
 // Delete indicates an expected call of Delete.
-func (mr *MockSessionRepositoryMockRecorder) Delete(ctx, tokenHash any) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) Delete(ctx, tokenHash any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockSessionRepository)(nil).Delete), ctx, tokenHash)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockRepository)(nil).Delete), ctx, tokenHash)
 }
 
 // Save mocks base method.
-func (m *MockSessionRepository) Save(ctx context.Context, tokenHash string, session domain.Session, ttl time.Duration) error {
+func (m *MockRepository) Save(ctx context.Context, tokenHash string, session domain.Session, ttl time.Duration) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Save", ctx, tokenHash, session, ttl)
 	ret0, _ := ret[0].(error)
@@ -63,7 +63,7 @@ func (m *MockSessionRepository) Save(ctx context.Context, tokenHash string, sess
 }
 
 // Save indicates an expected call of Save.
-func (mr *MockSessionRepositoryMockRecorder) Save(ctx, tokenHash, session, ttl any) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) Save(ctx, tokenHash, session, ttl any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockSessionRepository)(nil).Save), ctx, tokenHash, session, ttl)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockRepository)(nil).Save), ctx, tokenHash, session, ttl)
 }
