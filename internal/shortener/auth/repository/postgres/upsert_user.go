@@ -18,14 +18,13 @@ func (r *Repository) UpsertUser(ctx context.Context, user domain.User) (domain.U
 	defer cancel()
 
 	query := `
-		INSERT INTO urlshortener.users (id, google_sub, email, email_verified, name)
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO urlshortener.users (id, google_sub, email, name)
+		VALUES ($1, $2, $3, $4)
 		ON CONFLICT (google_sub) DO UPDATE SET
-			email          = EXCLUDED.email,
-			email_verified = EXCLUDED.email_verified,
-			name           = EXCLUDED.name,
-			updated_at     = now()
-		RETURNING id, google_sub, email, email_verified, name, created_at, updated_at;
+			email      = EXCLUDED.email,
+			name       = EXCLUDED.name,
+			updated_at = now()
+		RETURNING id, google_sub, email, name, created_at, updated_at;
 	`
 
 	row := r.pool.QueryRow(
@@ -34,7 +33,6 @@ func (r *Repository) UpsertUser(ctx context.Context, user domain.User) (domain.U
 		user.ID,
 		user.GoogleSub,
 		user.Email,
-		user.EmailVerified,
 		user.Name,
 	)
 
@@ -44,7 +42,6 @@ func (r *Repository) UpsertUser(ctx context.Context, user domain.User) (domain.U
 		&model.ID,
 		&model.GoogleSub,
 		&model.Email,
-		&model.EmailVerified,
 		&model.Name,
 		&model.CreatedAt,
 		&model.UpdatedAt,

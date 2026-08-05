@@ -7,13 +7,12 @@ import (
 )
 
 type User struct {
-	ID            uuid.UUID
-	GoogleSub     string
-	Email         string
-	EmailVerified bool
-	Name          string
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
+	ID        uuid.UUID
+	GoogleSub string
+	Email     string
+	Name      string
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 // GoogleIdentity — то, что подтвердил сам Google после обмена кодом на id_token.
@@ -28,10 +27,9 @@ type GoogleIdentity struct {
 
 func NewUser(identity GoogleIdentity) User {
 	return User{
-		ID:            uuid.New(),
-		GoogleSub:     identity.Sub,
-		Email:         identity.Email,
-		EmailVerified: identity.EmailVerified,
-		Name:          identity.Name,
+		ID:        uuid.New(),
+		GoogleSub: identity.Sub,
+		Email:     identity.Email,
+		Name:      identity.Name,
 	}
 }

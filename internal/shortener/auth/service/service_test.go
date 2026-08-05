@@ -64,7 +64,6 @@ func TestLoginWithGoogle(t *testing.T) {
 						assert.NotEqual(t, uuid.Nil, user.ID, "id must be generated before persisting")
 						assert.Equal(t, inputSub, user.GoogleSub)
 						assert.Equal(t, inputEmail, user.Email)
-						assert.True(t, user.EmailVerified)
 						assert.Equal(t, inputName, user.Name)
 
 						return domain.User{ID: savedUserID, GoogleSub: user.GoogleSub, Email: user.Email}, nil
