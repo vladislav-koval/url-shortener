@@ -22,6 +22,7 @@ type SessionRepository interface {
 	Delete(ctx context.Context, tokenHash string)
 }
 
+//go:generate mockgen -source=./service.go -destination=mocks/mock_service.go -package=mocks
 type SessionService struct {
 	repository SessionRepository
 	ttl        time.Duration

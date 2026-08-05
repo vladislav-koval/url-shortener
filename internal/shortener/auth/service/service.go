@@ -30,6 +30,7 @@ type SessionManager interface {
 	Delete(ctx context.Context, rawToken string)
 }
 
+//go:generate mockgen -source=./service.go -destination=mocks/mock_service.go -package=mocks
 type AuthService struct {
 	identityProvider IdentityProvider
 	userRepository   UserRepository
