@@ -9,6 +9,7 @@ var (
 	ErrNotFound        = errors.New("not found")
 	ErrInvalidArgument = errors.New("invalid argument")
 	ErrConflict        = errors.New("conflict")
+	ErrAuthorization   = errors.New("authorization error")
 )
 
 type FieldError struct {

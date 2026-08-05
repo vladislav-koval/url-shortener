@@ -14,6 +14,7 @@ import (
 	"github.com/vladislav-koval/url-shortener/internal/platform/shutdown"
 	"github.com/vladislav-koval/url-shortener/internal/platform/transport/http/middleware"
 	"github.com/vladislav-koval/url-shortener/internal/platform/transport/http/server"
+	"github.com/vladislav-koval/url-shortener/internal/shortener/auth"
 	"github.com/vladislav-koval/url-shortener/internal/shortener/urls"
 	"github.com/vladislav-koval/url-shortener/internal/shortener/urls/producer"
 	"go.uber.org/zap"
@@ -59,6 +60,9 @@ func main() {
 	log.Debug("initializing feature", zap.String("feature", "url shortener"))
 	shortenerModule := urls.NewModule(pgxPool, redisClient, clickWriter, log)
 
+	log.Debug("initializing feature", zap.String("feature", "auth"))
+	authModule := auth.NewModule(pgxPool, redisClient)
+
 	log.Debug("initializing HTTP server")
 	httpConfig := server.NewConfigMust()
 	httpServer := server.NewHTTPServer(
@@ -72,6 +76,7 @@ func main() {
 	)
 
 	httpServer.RegisterRoutes(shortenerModule.Handler.Routes()...)
+	httpServer.RegisterRoutes(authModule.Handler.Routes()...)
 
 	shutdown.Run(
 		ctx,

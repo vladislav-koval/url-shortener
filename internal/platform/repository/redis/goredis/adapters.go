@@ -25,6 +25,30 @@ type goredisStatusCmd struct {
 	*redis.StatusCmd
 }
 
+func (cmd goredisStatusCmd) Err() error {
+	err := cmd.StatusCmd.Err()
+
+	if err != nil {
+		return mapErrors(err)
+	}
+
+	return nil
+}
+
+type goredisIntCmd struct {
+	*redis.IntCmd
+}
+
+func (cmd goredisIntCmd) Err() error {
+	err := cmd.IntCmd.Err()
+
+	if err != nil {
+		return mapErrors(err)
+	}
+
+	return nil
+}
+
 func mapErrors(err error) error {
 	if errors.Is(err, redis.Nil) {
 		return cache.ErrNotFound
