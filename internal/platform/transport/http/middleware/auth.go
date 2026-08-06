@@ -15,17 +15,13 @@ func CurrentUser(resolve authorization.Resolver, cookieSecure bool) Middleware {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			cookie, err := r.Cookie(authorization.SessionCookieName)
 
-			if errors.Is(err, http.ErrNoCookie) {
+			if err != nil {
 				next.ServeHTTP(w, r)
 				return
 			}
+
 			log := logger.FromContext(r.Context())
 			responseHandler := response.NewHTTPResponseHandler(log, w)
-
-			if err != nil {
-				responseHandler.ErrorResponse(err, "read session cookie")
-				return
-			}
 
 			if cookie.Value == "" {
 				authorization.ClearSessionCookie(w, cookieSecure)
@@ -37,7 +33,7 @@ func CurrentUser(resolve authorization.Resolver, cookieSecure bool) Middleware {
 
 			if errors.Is(err, apperrors.ErrUnauthenticated) {
 				authorization.ClearSessionCookie(w, cookieSecure)
-				next.ServeHTTP(w, r)
+				responseHandler.ErrorResponse(err, "session not found but cookie has")
 				return
 			}
 
