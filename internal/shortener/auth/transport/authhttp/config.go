@@ -8,13 +8,11 @@ import (
 )
 
 type Config struct {
-	CookieSecure       bool
 	SuccessRedirectURL string
 	SessionTTL         time.Duration
 }
 
 type httpOnlyConfig struct {
-	CookieSecure       bool   `envconfig:"COOKIE_SECURE" required:"true"`
 	SuccessRedirectURL string `envconfig:"SUCCESS_REDIRECT_URL" required:"true"`
 }
 
@@ -34,7 +32,6 @@ func NewConfig() (Config, error) {
 	}
 
 	return Config{
-		CookieSecure:       httpCfg.CookieSecure,
 		SuccessRedirectURL: httpCfg.SuccessRedirectURL,
 		SessionTTL:         sessionCfg.TTL,
 	}, nil

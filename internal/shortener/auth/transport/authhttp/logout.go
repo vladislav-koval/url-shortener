@@ -14,7 +14,7 @@ func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
 
 	sessionCookie, err := r.Cookie(authorization.SessionCookieName)
 
-	h.clearSessionCookie(w)
+	authorization.ClearSessionCookie(w, h.cookieSecure)
 
 	if err == nil {
 		h.authService.Logout(r.Context(), sessionCookie.Value)

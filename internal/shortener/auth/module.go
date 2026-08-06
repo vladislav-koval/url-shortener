@@ -17,7 +17,7 @@ type Module struct {
 	SessionResolver authorization.Resolver
 }
 
-func NewModule(pool pool.Pool, cache cache.Pool) *Module {
+func NewModule(pool pool.Pool, cache cache.Pool, cookieSecure bool) *Module {
 	httpCfg := authhttp.NewConfigMust()
 
 	userRepository := postgres.NewUserRepository(pool)
@@ -35,7 +35,7 @@ func NewModule(pool pool.Pool, cache cache.Pool) *Module {
 		sessionService,
 	)
 
-	authHTTPHandler := authhttp.NewHTTPHandler(authService, httpCfg)
+	authHTTPHandler := authhttp.NewHTTPHandler(authService, httpCfg, cookieSecure)
 
 	return &Module{
 		Handler:         authHTTPHandler,

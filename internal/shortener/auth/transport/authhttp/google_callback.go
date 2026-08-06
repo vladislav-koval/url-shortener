@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/vladislav-koval/url-shortener/internal/platform/apperrors"
+	"github.com/vladislav-koval/url-shortener/internal/platform/authorization"
 	"github.com/vladislav-koval/url-shortener/internal/platform/logger"
 	"github.com/vladislav-koval/url-shortener/internal/platform/transport/http/response"
 )
@@ -56,7 +57,7 @@ func (h *Handler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.clearOAuthCookies(w)
-	h.setSessionCookie(w, sessionToken)
+	authorization.SetSessionCookie(w, sessionToken, h.cookieTTL, h.cookieSecure)
 
 	responseHandler.RedirectResponse(r, h.successRedirectURL)
 }

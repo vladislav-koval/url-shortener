@@ -5,7 +5,6 @@ const (
 	verifierCookieName = "google_oauth_verifier"
 
 	googleCookiePath = "/auth/google"
-	rootCookiePath   = "/"
 
 	logoutRedirect = "/"
 )

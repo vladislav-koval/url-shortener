@@ -16,7 +16,7 @@ func (r *Repository) GetByShortCode(ctx context.Context, code string) (domain.Li
 	originalURL, err := r.getCache(ctx, code)
 
 	if err == nil {
-		return domain.NewLink(code, originalURL), nil
+		return domain.NewLink(code, originalURL, nil), nil
 	}
 
 	if !errors.Is(err, cache.ErrNotFound) {

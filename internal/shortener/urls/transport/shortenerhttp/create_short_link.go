@@ -7,16 +7,12 @@ import (
 	"github.com/vladislav-koval/url-shortener/internal/platform/logger"
 	"github.com/vladislav-koval/url-shortener/internal/platform/transport/http/request"
 	"github.com/vladislav-koval/url-shortener/internal/platform/transport/http/response"
-	"go.uber.org/zap"
 )
 
 func (h *Handler) CreateShortLink(w http.ResponseWriter, r *http.Request) {
 	log := logger.FromContext(r.Context())
-	userId, ok := authorization.FromContext(r.Context())
-	log.Error("asdf",
-		zap.String("userId", userId.String()),
-		zap.Bool("ok", ok),
-	)
+	userID := authorization.FromContext(r.Context())
+
 	responseHandler := response.NewHTTPResponseHandler(log, w)
 
 	var req CreateLinkRequest
@@ -26,7 +22,7 @@ func (h *Handler) CreateShortLink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	linkDomain, err := h.shortenerService.CreateShortLink(r.Context(), req.OriginalURL)
+	linkDomain, err := h.shortenerService.CreateShortLink(r.Context(), req.OriginalURL, userID)
 
 	if err != nil {
 		responseHandler.ErrorResponse(err, "failed to create short link")

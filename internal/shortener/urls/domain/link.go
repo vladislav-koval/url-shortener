@@ -4,18 +4,21 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/google/uuid"
 	"github.com/vladislav-koval/url-shortener/internal/platform/apperrors"
 )
 
 type Link struct {
 	ShortCode   string
 	OriginalURL string
+	UserID      *uuid.UUID
 }
 
-func NewLink(shortCode string, originalURL string) Link {
+func NewLink(shortCode string, originalURL string, userID *uuid.UUID) Link {
 	return Link{
 		ShortCode:   shortCode,
 		OriginalURL: originalURL,
+		UserID:      userID,
 	}
 }
 

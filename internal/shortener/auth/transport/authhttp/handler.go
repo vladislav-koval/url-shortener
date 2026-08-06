@@ -20,10 +20,10 @@ type Service interface {
 	Logout(ctx context.Context, rawToken string)
 }
 
-func NewHTTPHandler(authService Service, cfg Config) *Handler {
+func NewHTTPHandler(authService Service, cfg Config, cookieSecure bool) *Handler {
 	return &Handler{
 		authService:        authService,
-		cookieSecure:       cfg.CookieSecure,
+		cookieSecure:       cookieSecure,
 		successRedirectURL: cfg.SuccessRedirectURL,
 		cookieTTL:          cfg.SessionTTL,
 	}

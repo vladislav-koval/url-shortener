@@ -54,6 +54,21 @@ func (mr *MockRepositoryMockRecorder) Delete(ctx, tokenHash any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockRepository)(nil).Delete), ctx, tokenHash)
 }
 
+// Get mocks base method.
+func (m *MockRepository) Get(ctx context.Context, tokenHash string) (domain.Session, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Get", ctx, tokenHash)
+	ret0, _ := ret[0].(domain.Session)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get.
+func (mr *MockRepositoryMockRecorder) Get(ctx, tokenHash any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockRepository)(nil).Get), ctx, tokenHash)
+}
+
 // Save mocks base method.
 func (m *MockRepository) Save(ctx context.Context, tokenHash string, session domain.Session, ttl time.Duration) error {
 	m.ctrl.T.Helper()

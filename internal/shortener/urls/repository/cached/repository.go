@@ -4,13 +4,14 @@ import (
 	"context"
 	"time"
 
+	"github.com/google/uuid"
 	cache "github.com/vladislav-koval/url-shortener/internal/platform/repository/redis"
 	"github.com/vladislav-koval/url-shortener/internal/shortener/urls/domain"
 )
 
 //go:generate mockgen -source=./repository.go -destination=mocks/mock_repository.go -package=mocks
 type UnderlyingRepository interface {
-	CreateShortLink(ctx context.Context, shortCode string, originalURL string) (domain.Link, error)
+	CreateShortLink(ctx context.Context, shortCode string, originalURL string, userID *uuid.UUID) (domain.Link, error)
 	GetByShortCode(ctx context.Context, code string) (domain.Link, error)
 }
 

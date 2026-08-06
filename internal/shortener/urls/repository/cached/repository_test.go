@@ -64,7 +64,7 @@ func TestCreateShortLink(t *testing.T) {
 		{
 			name: "success path",
 			setupMock: func(poolRedisMock *redismock.MockPool, statusCmdMock *redismock.MockStatusCmd, mainRepo *mocks.MockUnderlyingRepository) {
-				mainRepo.EXPECT().CreateShortLink(gomock.Any(), inputShortCode, inputOriginalURL).
+				mainRepo.EXPECT().CreateShortLink(gomock.Any(), inputShortCode, inputOriginalURL, gomock.Any()).
 					Return(domain.Link{
 						ShortCode:   inputShortCode,
 						OriginalURL: inputOriginalURL,
@@ -90,7 +90,7 @@ func TestCreateShortLink(t *testing.T) {
 		{
 			name: "failed to create in main repo",
 			setupMock: func(poolRedisMock *redismock.MockPool, statusCmdMock *redismock.MockStatusCmd, mainRepo *mocks.MockUnderlyingRepository) {
-				mainRepo.EXPECT().CreateShortLink(gomock.Any(), inputShortCode, inputOriginalURL).
+				mainRepo.EXPECT().CreateShortLink(gomock.Any(), inputShortCode, inputOriginalURL, gomock.Any()).
 					Return(domain.Link{}, apperrors.ErrConflict).
 					Times(1)
 
@@ -107,7 +107,7 @@ func TestCreateShortLink(t *testing.T) {
 		{
 			name: "failed to set cache",
 			setupMock: func(poolRedisMock *redismock.MockPool, statusCmdMock *redismock.MockStatusCmd, mainRepo *mocks.MockUnderlyingRepository) {
-				mainRepo.EXPECT().CreateShortLink(gomock.Any(), inputShortCode, inputOriginalURL).
+				mainRepo.EXPECT().CreateShortLink(gomock.Any(), inputShortCode, inputOriginalURL, gomock.Any()).
 					Return(domain.Link{
 						ShortCode:   inputShortCode,
 						OriginalURL: inputOriginalURL,
@@ -141,7 +141,7 @@ func TestCreateShortLink(t *testing.T) {
 
 			tt.setupMock(f.poolRedisMock, f.statusCmdMock, f.mainRepoMock)
 
-			link, err := f.repo.CreateShortLink(f.ctx, inputShortCode, inputOriginalURL)
+			link, err := f.repo.CreateShortLink(f.ctx, inputShortCode, inputOriginalURL, nil)
 
 			tt.check(t, link, err, f.observedLogs)
 		})

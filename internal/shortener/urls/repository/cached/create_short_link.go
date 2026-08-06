@@ -3,15 +3,16 @@ package cached
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/vladislav-koval/url-shortener/internal/platform/logger"
 	"github.com/vladislav-koval/url-shortener/internal/shortener/urls/domain"
 	"go.uber.org/zap"
 )
 
-func (r *Repository) CreateShortLink(ctx context.Context, shortCode string, originalURL string) (domain.Link, error) {
+func (r *Repository) CreateShortLink(ctx context.Context, shortCode string, originalURL string, userID *uuid.UUID) (domain.Link, error) {
 	log := logger.FromContext(ctx)
 
-	domainLink, err := r.mainRepository.CreateShortLink(ctx, shortCode, originalURL)
+	domainLink, err := r.mainRepository.CreateShortLink(ctx, shortCode, originalURL, userID)
 	if err != nil {
 		return domain.Link{}, err
 	}

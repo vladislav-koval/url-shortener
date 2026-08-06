@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/vladislav-koval/url-shortener/internal/platform/apperrors"
 	"github.com/vladislav-koval/url-shortener/internal/platform/repository/postgres/pool"
@@ -38,23 +39,43 @@ func TestCreateShortLink(t *testing.T) {
 		inputOriginalURL = "http://google.com"
 	)
 
+	inputUserID := uuid.New()
+
 	testCases := []struct {
 		name     string
+		userID   *uuid.UUID
 		scanMock func(dest ...interface{}) error
 		check    func(t *testing.T, link domain.Link, err error)
 	}{
 		{
-			name: "success create short link",
+			name:   "success create short link, anonymous",
+			userID: nil,
 			scanMock: func(dest ...interface{}) error {
 				*dest[0].(*string) = inputShortCode
 				*dest[1].(*string) = inputOriginalURL
+				*dest[2].(**uuid.UUID) = nil
 				return nil
 			},
 			check: func(t *testing.T, link domain.Link, err error) {
 				assert.NoError(t, err)
 				assert.Equal(t, domain.Link{ShortCode: inputShortCode, OriginalURL: inputOriginalURL}, link)
 			},
-		}, {
+		},
+		{
+			name:   "success create short link, owned by user",
+			userID: &inputUserID,
+			scanMock: func(dest ...interface{}) error {
+				*dest[0].(*string) = inputShortCode
+				*dest[1].(*string) = inputOriginalURL
+				*dest[2].(**uuid.UUID) = &inputUserID
+				return nil
+			},
+			check: func(t *testing.T, link domain.Link, err error) {
+				assert.NoError(t, err)
+				assert.Equal(t, domain.Link{ShortCode: inputShortCode, OriginalURL: inputOriginalURL, UserID: &inputUserID}, link)
+			},
+		},
+		{
 			name: "err conflict",
 			scanMock: func(dest ...interface{}) error {
 				return pool.ErrUniqueViolation
@@ -79,16 +100,16 @@ func TestCreateShortLink(t *testing.T) {
 			repo, poolMock, rowMock := initTest(t)
 
 			rowMock.EXPECT().
-				Scan(gomock.Any(), gomock.Any()).
+				Scan(gomock.Any(), gomock.Any(), gomock.Any()).
 				DoAndReturn(tt.scanMock).
 				Times(1)
 
 			poolMock.EXPECT().
-				QueryRow(gomock.Any(), gomock.Any(), inputShortCode, inputOriginalURL).
+				QueryRow(gomock.Any(), gomock.Any(), inputShortCode, inputOriginalURL, tt.userID).
 				Return(rowMock).
 				Times(1)
 
-			domainLink, err := repo.CreateShortLink(context.Background(), inputShortCode, inputOriginalURL)
+			domainLink, err := repo.CreateShortLink(context.Background(), inputShortCode, inputOriginalURL, tt.userID)
 
 			tt.check(t, domainLink, err)
 		})
@@ -101,21 +122,37 @@ func TestGetByShortCode(t *testing.T) {
 		inputOriginalURL = "http://google.com"
 	)
 
+	inputUserID := uuid.New()
+
 	testCases := []struct {
 		name     string
 		scanMock func(dest ...interface{}) error
 		check    func(t *testing.T, link domain.Link, err error)
 	}{
 		{
-			name: "success get by short code",
+			name: "success get by short code, anonymous",
 			scanMock: func(dest ...interface{}) error {
 				*dest[0].(*string) = inputShortCode
 				*dest[1].(*string) = inputOriginalURL
+				*dest[2].(**uuid.UUID) = nil
 				return nil
 			},
 			check: func(t *testing.T, link domain.Link, err error) {
 				assert.NoError(t, err)
 				assert.Equal(t, domain.Link{ShortCode: inputShortCode, OriginalURL: inputOriginalURL}, link)
+			},
+		},
+		{
+			name: "success get by short code, owned by user",
+			scanMock: func(dest ...interface{}) error {
+				*dest[0].(*string) = inputShortCode
+				*dest[1].(*string) = inputOriginalURL
+				*dest[2].(**uuid.UUID) = &inputUserID
+				return nil
+			},
+			check: func(t *testing.T, link domain.Link, err error) {
+				assert.NoError(t, err)
+				assert.Equal(t, domain.Link{ShortCode: inputShortCode, OriginalURL: inputOriginalURL, UserID: &inputUserID}, link)
 			},
 		},
 		{
@@ -144,7 +181,7 @@ func TestGetByShortCode(t *testing.T) {
 			repo, poolMock, rowMock := initTest(t)
 
 			rowMock.EXPECT().
-				Scan(gomock.Any(), gomock.Any()).
+				Scan(gomock.Any(), gomock.Any(), gomock.Any()).
 				DoAndReturn(tt.scanMock).
 				Times(1)
 

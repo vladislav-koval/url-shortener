@@ -9,3 +9,11 @@ CREATE TABLE IF NOT EXISTS urlshortener.users
 
     CONSTRAINT users_google_sub_unique UNIQUE (google_sub)
 );
+
+ALTER TABLE urlshortener.links
+    ADD COLUMN user_id UUID
+    REFERENCES urlshortener.users(id)
+    ON DELETE SET NULL;
+
+CREATE INDEX idx_links_user_id
+    ON urlshortener.links(user_id);

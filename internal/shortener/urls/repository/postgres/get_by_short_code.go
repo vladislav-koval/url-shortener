@@ -15,7 +15,7 @@ func (r *Repository) GetByShortCode(ctx context.Context, code string) (domain.Li
 	defer cancel()
 
 	query := `
-		SELECT short_code, original_url FROM urlshortener.links WHERE short_code = $1;
+		SELECT short_code, original_url, user_id FROM urlshortener.links WHERE short_code = $1;
 	`
 
 	row := r.pool.QueryRow(ctx, query, code)
@@ -25,6 +25,7 @@ func (r *Repository) GetByShortCode(ctx context.Context, code string) (domain.Li
 	err := row.Scan(
 		&model.ShortCode,
 		&model.OriginalURL,
+		&model.UserID,
 	)
 
 	if err != nil {

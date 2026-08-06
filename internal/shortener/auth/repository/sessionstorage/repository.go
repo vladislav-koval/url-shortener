@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/vladislav-koval/url-shortener/internal/platform/apperrors"
 	"github.com/vladislav-koval/url-shortener/internal/platform/logger"
 	"github.com/vladislav-koval/url-shortener/internal/platform/repository/redis"
 	"github.com/vladislav-koval/url-shortener/internal/shortener/auth/domain"
@@ -63,13 +64,17 @@ func (r *Repository) Delete(
 func (r *Repository) Get(ctx context.Context, tokenHash string) (domain.Session, error) {
 	data, err := r.cache.Get(ctx, cacheKey(tokenHash)).Result()
 
-	if !errors.Is(err, cache.ErrNotFound) {
+	if errors.Is(err, cache.ErrNotFound) {
+		return domain.Session{}, fmt.Errorf("session not found: %w", apperrors.ErrUnauthenticated)
+	}
+
+	if err != nil {
 		return domain.Session{}, fmt.Errorf("get session from cache: %w", err)
 	}
 
 	var session domain.Session
 	if err := json.Unmarshal([]byte(data), &session); err != nil {
-		return domain.Session{}, fmt.Errorf("unmarshal cache: %w", err)
+		return domain.Session{}, fmt.Errorf("unmarshal session: %w", err)
 	}
 
 	return session, nil

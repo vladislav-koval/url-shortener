@@ -11,7 +11,6 @@ func (s *Service) Resolve(ctx context.Context, rawToken string) (uuid.UUID, erro
 	hashToken := hashSessionToken(rawToken)
 
 	session, err := s.repository.Get(ctx, hashToken)
-
 	if err != nil {
 		return uuid.Nil, fmt.Errorf("get session from repository: %w", err)
 	}

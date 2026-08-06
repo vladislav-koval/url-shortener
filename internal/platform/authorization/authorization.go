@@ -19,8 +19,12 @@ func WithUserID(ctx context.Context, userID uuid.UUID) context.Context {
 	return context.WithValue(ctx, key, userID)
 }
 
-func FromContext(ctx context.Context) (uuid.UUID, bool) {
+func FromContext(ctx context.Context) *uuid.UUID {
 	userID, ok := ctx.Value(key).(uuid.UUID)
 
-	return userID, ok
+	if !ok {
+		return nil
+	}
+
+	return &userID
 }

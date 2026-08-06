@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/vladislav-koval/url-shortener/internal/platform/apperrors"
 	"github.com/vladislav-koval/url-shortener/internal/shortener/urls/domain"
 )
@@ -16,8 +17,8 @@ const (
 	maxCreateLinkAttempts = 5
 )
 
-func (s *Service) CreateShortLink(ctx context.Context, originalURL string) (domain.Link, error) {
-	uninitializedLink := domain.NewLink("", originalURL)
+func (s *Service) CreateShortLink(ctx context.Context, originalURL string, userID *uuid.UUID) (domain.Link, error) {
+	uninitializedLink := domain.NewLink("", originalURL, userID)
 
 	if err := uninitializedLink.Validate(); err != nil {
 		return domain.Link{}, fmt.Errorf("validate link: %w", err)
@@ -29,7 +30,12 @@ func (s *Service) CreateShortLink(ctx context.Context, originalURL string) (doma
 			return domain.Link{}, fmt.Errorf("generate short code: %w", err)
 		}
 
-		domainLink, err := s.shortenerRepository.CreateShortLink(ctx, code, uninitializedLink.OriginalURL)
+		domainLink, err := s.shortenerRepository.CreateShortLink(
+			ctx,
+			code,
+			uninitializedLink.OriginalURL,
+			uninitializedLink.UserID,
+		)
 
 		if err == nil {
 			return domainLink, nil

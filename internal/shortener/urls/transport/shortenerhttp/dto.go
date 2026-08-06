@@ -9,13 +9,21 @@ type CreateLinkRequest struct {
 }
 
 type CreateLinkResponse struct {
-	ShortCode   string `json:"short_code"`
-	OriginalURL string `json:"original_url"`
+	ShortCode   string  `json:"short_code"`
+	OriginalURL string  `json:"original_url"`
+	UserID      *string `json:"user_id,omitempty"`
 }
 
 func newCreateLinkResponseFromDomain(link domain.Link) CreateLinkResponse {
-	return CreateLinkResponse{
+	res := CreateLinkResponse{
 		ShortCode:   link.ShortCode,
 		OriginalURL: link.OriginalURL,
 	}
+
+	if link.UserID != nil {
+		userID := link.UserID.String()
+		res.UserID = &userID
+	}
+
+	return res
 }

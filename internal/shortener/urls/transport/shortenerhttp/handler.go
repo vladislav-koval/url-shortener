@@ -3,6 +3,7 @@ package shortenerhttp
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/vladislav-koval/url-shortener/internal/platform/authorization"
 	"github.com/vladislav-koval/url-shortener/internal/platform/messaging/events"
 	"github.com/vladislav-koval/url-shortener/internal/platform/transport/http/middleware"
@@ -15,7 +16,7 @@ type Handler struct {
 }
 
 type Service interface {
-	CreateShortLink(ctx context.Context, originalURL string) (domain.Link, error)
+	CreateShortLink(ctx context.Context, originalURL string, userID *uuid.UUID) (domain.Link, error)
 	ResolveShortLink(ctx context.Context, code string, event events.ClickEvent) (string, error)
 }
 
@@ -25,13 +26,13 @@ func NewHTTPHandler(shortenerService Service) *Handler {
 	}
 }
 
-func (h *Handler) Routes(resolver authorization.Resolver) []server.Route {
+func (h *Handler) Routes(resolver authorization.Resolver, cookieSecure bool) []server.Route {
 	return []server.Route{
 		{
 			Method:     "POST",
 			Path:       "/link",
 			Handler:    h.CreateShortLink,
-			Middleware: []middleware.Middleware{middleware.CurrentUser(resolver)},
+			Middleware: []middleware.Middleware{middleware.CurrentUser(resolver, cookieSecure)},
 		},
 		{
 			Method:  "GET",
