@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/vladislav-koval/url-shortener/internal/platform/apperrors"
 	"github.com/vladislav-koval/url-shortener/internal/platform/messaging/events"
@@ -42,7 +43,7 @@ func TestCreateShortLink(t *testing.T) {
 			originalURL: inputOriginalURL,
 			setupMock: func(repo *mocks.MockRepository, originalURL string) {
 				repo.EXPECT().
-					CreateShortLink(gomock.Any(), gomock.Any(), originalURL).
+					CreateShortLink(gomock.Any(), gomock.Any(), originalURL, gomock.Any()).
 					Return(domain.Link{ShortCode: inputShortCode, OriginalURL: originalURL}, nil).
 					Times(1)
 			},
@@ -54,10 +55,10 @@ func TestCreateShortLink(t *testing.T) {
 			setupMock: func(repo *mocks.MockRepository, originalURL string) {
 				gomock.InOrder(
 					repo.EXPECT().
-						CreateShortLink(gomock.Any(), gomock.Any(), originalURL).
+						CreateShortLink(gomock.Any(), gomock.Any(), originalURL, gomock.Any()).
 						Return(domain.Link{}, apperrors.ErrConflict),
 					repo.EXPECT().
-						CreateShortLink(gomock.Any(), gomock.Any(), originalURL).
+						CreateShortLink(gomock.Any(), gomock.Any(), originalURL, gomock.Any()).
 						Return(domain.Link{ShortCode: inputShortCode, OriginalURL: originalURL}, nil),
 				)
 			},
@@ -68,7 +69,7 @@ func TestCreateShortLink(t *testing.T) {
 			originalURL: inputOriginalURL,
 			setupMock: func(repo *mocks.MockRepository, originalURL string) {
 				repo.EXPECT().
-					CreateShortLink(gomock.Any(), gomock.Any(), originalURL).
+					CreateShortLink(gomock.Any(), gomock.Any(), originalURL, gomock.Any()).
 					Return(domain.Link{}, apperrors.ErrConflict).
 					Times(maxCreateLinkAttempts)
 			},
@@ -94,7 +95,7 @@ func TestCreateShortLink(t *testing.T) {
 				tt.setupMock(repository, tt.originalURL)
 			}
 
-			actual, err := svc.CreateShortLink(context.Background(), tt.originalURL)
+			actual, err := svc.CreateShortLink(context.Background(), tt.originalURL, nil)
 
 			if tt.wantErr != nil {
 				assert.ErrorIs(t, err, tt.wantErr)
@@ -110,8 +111,8 @@ func TestCreateShortLink(t *testing.T) {
 		repo, _, svc := initTest(t)
 
 		repo.EXPECT().
-			CreateShortLink(gomock.Any(), gomock.Any(), inputOriginalURL).
-			DoAndReturn(func(ctx context.Context, code string, url string) (domain.Link, error) {
+			CreateShortLink(gomock.Any(), gomock.Any(), inputOriginalURL, gomock.Any()).
+			DoAndReturn(func(ctx context.Context, code string, url string, userID *uuid.UUID) (domain.Link, error) {
 				assert.Len(t, code, 7) // Хардкод длины защищает от случайного изменения константы
 
 				for _, char := range code {
@@ -122,8 +123,24 @@ func TestCreateShortLink(t *testing.T) {
 			}).
 			Times(1)
 
-		_, err := svc.CreateShortLink(context.Background(), inputOriginalURL)
+		_, err := svc.CreateShortLink(context.Background(), inputOriginalURL, nil)
 		assert.NoError(t, err)
+	})
+
+	t.Run("passes userID through to repository", func(t *testing.T) {
+		repo, _, svc := initTest(t)
+
+		userID := uuid.New()
+
+		repo.EXPECT().
+			CreateShortLink(gomock.Any(), gomock.Any(), inputOriginalURL, &userID).
+			Return(domain.Link{ShortCode: inputShortCode, OriginalURL: inputOriginalURL, UserID: &userID}, nil).
+			Times(1)
+
+		actual, err := svc.CreateShortLink(context.Background(), inputOriginalURL, &userID)
+
+		assert.NoError(t, err)
+		assert.Equal(t, &userID, actual.UserID)
 	})
 }
 

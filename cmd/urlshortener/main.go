@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/vladislav-koval/url-shortener/internal/platform/authorization"
 	"github.com/vladislav-koval/url-shortener/internal/platform/logger"
 	"github.com/vladislav-koval/url-shortener/internal/platform/messaging/gokafka/segmentio"
 	"github.com/vladislav-koval/url-shortener/internal/platform/repository/postgres/pool/pgx"
@@ -60,8 +61,10 @@ func main() {
 	log.Debug("initializing feature", zap.String("feature", "url shortener"))
 	shortenerModule := urls.NewModule(pgxPool, redisClient, clickWriter, log)
 
+	authorizationCfg := authorization.NewConfigMust()
+
 	log.Debug("initializing feature", zap.String("feature", "auth"))
-	authModule := auth.NewModule(pgxPool, redisClient)
+	authModule := auth.NewModule(pgxPool, redisClient, authorizationCfg.CookieSecure)
 
 	log.Debug("initializing HTTP server")
 	httpConfig := server.NewConfigMust()
@@ -75,7 +78,7 @@ func main() {
 		middleware.Panic(),
 	)
 
-	httpServer.RegisterRoutes(shortenerModule.Handler.Routes()...)
+	httpServer.RegisterRoutes(shortenerModule.Handler.Routes(authModule.SessionResolver, authorizationCfg.CookieSecure)...)
 	httpServer.RegisterRoutes(authModule.Handler.Routes()...)
 
 	shutdown.Run(

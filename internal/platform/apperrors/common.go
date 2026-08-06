@@ -10,6 +10,7 @@ var (
 	ErrInvalidArgument = errors.New("invalid argument")
 	ErrConflict        = errors.New("conflict")
 	ErrAuthorization   = errors.New("authorization error")
+	ErrUnauthenticated = errors.New("authentication error")
 )
 
 type FieldError struct {

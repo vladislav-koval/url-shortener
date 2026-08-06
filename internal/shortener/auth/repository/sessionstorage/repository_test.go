@@ -84,7 +84,7 @@ func TestSave(t *testing.T) {
 					Times(1)
 			},
 			check: func(t *testing.T, err error) {
-				assert.ErrorContains(t, err, "save sessionstorage in redis")
+				assert.ErrorContains(t, err, "save session in cache")
 			},
 		},
 	}

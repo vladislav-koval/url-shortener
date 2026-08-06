@@ -9,13 +9,13 @@ import (
 	"github.com/vladislav-koval/url-shortener/internal/shortener/auth/domain"
 )
 
-func (s *SessionService) Create(
+func (s *Service) Create(
 	ctx context.Context,
 	userID uuid.UUID,
 ) (string, error) {
 	rawToken, err := generateSessionToken()
 	if err != nil {
-		return "", fmt.Errorf("generate sessionstorage token: %w", err)
+		return "", fmt.Errorf("generate session token: %w", err)
 	}
 
 	session := domain.Session{
@@ -31,7 +31,7 @@ func (s *SessionService) Create(
 		session,
 		s.ttl,
 	); err != nil {
-		return "", fmt.Errorf("save sessionstorage: %w", err)
+		return "", fmt.Errorf("save session: %w", err)
 	}
 
 	return rawToken, nil

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/vladislav-koval/url-shortener/internal/platform/messaging/events"
 	"github.com/vladislav-koval/url-shortener/internal/shortener/urls/domain"
 )
@@ -14,7 +15,7 @@ type Service struct {
 }
 
 type Repository interface {
-	CreateShortLink(ctx context.Context, shortCode string, originalURL string) (domain.Link, error)
+	CreateShortLink(ctx context.Context, shortCode string, originalURL string, userID *uuid.UUID) (domain.Link, error)
 	GetByShortCode(ctx context.Context, code string) (domain.Link, error)
 }
 
