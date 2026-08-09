@@ -1,0 +1,72 @@
+# EasyP configuration file.
+# Documentation: https://easyp.tech/docs/guide/introduction/what-is
+
+# Внешние proto-зависимости (пока нет — используем только свои контракты)
+deps:
+  - github.com/bufbuild/protoc-gen-validate
+
+# Кодогенерация
+generate:
+  inputs:
+    - directory: "api/proto"
+  plugins:
+    - name: protoc-gen-go
+      out: api/gen
+      opts:
+        module: github.com/vladislav-koval/url-shortener/api/gen
+
+    - name: protoc-gen-go-grpc
+      out: api/gen
+      opts:
+        module: github.com/vladislav-koval/url-shortener/api/gen
+
+    - name: validate
+      out: api/gen
+      opts:
+        module: github.com/vladislav-koval/url-shortener/api/gen
+        lang: "go"
+
+lint:
+  use:
+    # Minimal
+    - DIRECTORY_SAME_PACKAGE
+    - PACKAGE_DEFINED
+    - PACKAGE_DIRECTORY_MATCH
+    - PACKAGE_SAME_DIRECTORY
+
+    # Basic
+    - ENUM_FIRST_VALUE_ZERO
+    - ENUM_NO_ALLOW_ALIAS
+    - ENUM_PASCAL_CASE
+    - ENUM_VALUE_UPPER_SNAKE_CASE
+    - FIELD_LOWER_SNAKE_CASE
+    - IMPORT_NO_PUBLIC
+    - IMPORT_NO_WEAK
+    - IMPORT_USED
+    - MESSAGE_PASCAL_CASE
+    - ONEOF_LOWER_SNAKE_CASE
+    - PACKAGE_LOWER_SNAKE_CASE
+    - PACKAGE_SAME_GO_PACKAGE
+    - RPC_PASCAL_CASE
+    - SERVICE_PASCAL_CASE
+
+    # Default
+    - ENUM_VALUE_PREFIX
+    - ENUM_ZERO_VALUE_SUFFIX
+    - FILE_LOWER_SNAKE_CASE
+    - RPC_REQUEST_RESPONSE_UNIQUE
+    - RPC_REQUEST_STANDARD_NAME
+    - RPC_RESPONSE_STANDARD_NAME
+    - PACKAGE_VERSION_SUFFIX
+    - SERVICE_SUFFIX
+
+    # Unary RPC — запрет стриминга (request/response only).
+    - RPC_NO_CLIENT_STREAMING
+    - RPC_NO_SERVER_STREAMING
+
+  service_suffix: Service
+
+# Breaking change detection.
+breaking:
+  # Git-ref, с которым сравнивать текущие proto.
+  against_git_ref: main

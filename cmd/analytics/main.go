@@ -9,11 +9,14 @@ import (
 
 	"github.com/vladislav-koval/url-shortener/internal/analytics/clicks"
 	"github.com/vladislav-koval/url-shortener/internal/analytics/clicks/consumer"
+	"github.com/vladislav-koval/url-shortener/internal/analytics/stats"
 	"github.com/vladislav-koval/url-shortener/internal/platform/logger"
 	"github.com/vladislav-koval/url-shortener/internal/platform/messaging/gokafka"
 	"github.com/vladislav-koval/url-shortener/internal/platform/messaging/gokafka/segmentio"
 	"github.com/vladislav-koval/url-shortener/internal/platform/repository/postgres/pool/pgx"
 	"github.com/vladislav-koval/url-shortener/internal/platform/shutdown"
+	"github.com/vladislav-koval/url-shortener/internal/platform/transport/grpc/interceptor"
+	"github.com/vladislav-koval/url-shortener/internal/platform/transport/grpc/server"
 	"go.uber.org/zap"
 )
 
@@ -42,7 +45,7 @@ func main() {
 		clickReaders[i] = segmentio.NewReader(segmentio.NewConfigMust(), clickConfig.Topic, "AnalyticsGroupId")
 	}
 
-	log.Debug("initializing feature", zap.String("feature", "analytics"))
+	log.Debug("initializing feature", zap.String("feature", "analytics consumer"))
 	analyticsModule := clicks.NewModule(pgxPool, clickReaders, log, clickConfig)
 
 	runners := make([]func() error, len(analyticsModule.Consumers))
@@ -50,12 +53,31 @@ func main() {
 		runners[i] = c.Run
 	}
 
+	grpcServer := server.NewGRPCServer(
+		server.NewConfigMust(),
+		log,
+		interceptor.Validation(),
+		interceptor.Error(log),
+		interceptor.Logger(log),
+		interceptor.Panic(),
+	)
+
+	log.Debug("initializing feature", zap.String("feature", "analytics stats"))
+	statsModule := stats.NewStatsModule(pgxPool)
+	statsModule.Handler.Register(grpcServer.Registrar())
+
+	runners = append(runners, grpcServer.Run)
+
 	shutdown.Run(
 		ctx,
 		log,
 		shutdown.NewConfigMust().Timeout,
 		runners,
 		func(shutdownCtx context.Context) {
+			if err := grpcServer.Shutdown(shutdownCtx); err != nil {
+				log.Error("failed to shutdown grpc server", zap.Error(err))
+			}
+
 			for _, c := range analyticsModule.Consumers {
 				c.Shutdown(shutdownCtx)
 			}

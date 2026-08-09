@@ -75,3 +75,33 @@ migrate-action:
 		-path ./migrations \
 		-database postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable \
 		$(action)
+
+EASYP_VERSION := v0.16.6
+PROTOC_GEN_GO_VERSION := v1.36.11
+PROTOC_GEN_GO_GRPC_VERSION := v1.6.2
+PROTOC_GEN_VALIDATE := v1.3.3
+
+.PHONY: tools
+tools: ## Установить easyp и protoc-плагины, зафиксированных версий
+	go install github.com/easyp-tech/easyp/cmd/easyp@$(EASYP_VERSION)
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@$(PROTOC_GEN_GO_VERSION)
+	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@$(PROTOC_GEN_GO_GRPC_VERSION)
+	go install github.com/envoyproxy/protoc-gen-validate@$(PROTOC_GEN_VALIDATE)
+
+.PHONY: proto
+proto: ## Сгенерировать Go-код из .proto (api/proto -> api/gen)
+	easyp mod download
+	easyp generate
+
+.PHONY: proto-lint
+proto-lint: ## Проверить .proto на соответствие правилам easyp.yaml
+	easyp lint
+
+.PHONY: proto-breaking
+proto-breaking: ## Проверить breaking changes относительно основной ветки
+	easyp breaking --against master
+
+.PHONY: proto-check
+proto-check: proto ## CI-проверка: сгенерённый код не разошёлся с .proto
+	git diff --exit-code api/gen || \
+		(echo "api/gen out of sync with .proto files — run 'make proto' and commit" && exit 1)

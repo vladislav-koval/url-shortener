@@ -28,3 +28,12 @@ func FromContext(ctx context.Context) *uuid.UUID {
 
 	return &userID
 }
+
+func MustFromContext(ctx context.Context) uuid.UUID {
+	userID := FromContext(ctx)
+	if userID == nil {
+		panic("authorization: user id is missing from context")
+	}
+
+	return *userID
+}

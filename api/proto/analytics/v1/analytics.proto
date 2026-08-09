@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package analytics.v1;
+
+import "validate/validate.proto";
+
+option go_package = "github.com/vladislav-koval/url-shortener/api/gen/analytics/v1;analyticsv1";
+
+service AnalyticsService {
+  rpc GetLinkClickCounts(GetClickCountsRequest) returns (GetClickCountsResponse);
+}
+
+message GetClickCountsRequest {
+  repeated string short_codes = 1 [
+    (validate.rules).repeated = {
+      min_items: 1
+      max_items: 100
+      unique: true
+      items: {
+        string: {
+          min_len: 1
+          max_len: 10 // 10 с запасом, как и в миграции
+        }
+      }
+    }
+  ];
+}
+
+message LinkClickCount {
+  string short_code = 1;
+  int64 click_count = 2;
+}
+
+message GetClickCountsResponse {
+  repeated LinkClickCount counts = 1;
+}
