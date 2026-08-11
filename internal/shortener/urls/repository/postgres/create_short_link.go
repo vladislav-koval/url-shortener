@@ -36,6 +36,10 @@ func (r *Repository) CreateShortLink(ctx context.Context, shortCode string, orig
 			return domain.Link{}, fmt.Errorf("short code %q already taken: %w", shortCode, apperrors.ErrConflict)
 		}
 
+		if errors.Is(err, pool.ErrViolatesForeignKey) {
+			return domain.Link{}, fmt.Errorf("user %v no longer exists: %w", userID, apperrors.ErrUnauthenticated)
+		}
+
 		return domain.Link{}, fmt.Errorf("insert link: %w", err)
 	}
 

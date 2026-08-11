@@ -19,7 +19,7 @@ func (r *Repository) CountByShortCodes(ctx context.Context, shortCodes []string)
 			requested.short_code,
 			COUNT(clicks.short_code) AS click_count
 		FROM requested
-		LEFT JOIN urlshortener.clicks AS clicks
+		LEFT JOIN analytics.clicks AS clicks
 			ON clicks.short_code = requested.short_code
 		GROUP BY requested.short_code;
 	`

@@ -13,7 +13,7 @@ func (r *Repository) SaveClicks(ctx context.Context, events []events.ClickEvent)
 	defer cancel()
 
 	numFields := 4
-	query := "INSERT INTO urlshortener.clicks (id, short_code, ip_address, clicked_at) VALUES "
+	query := "INSERT INTO analytics.clicks (id, short_code, ip_address, clicked_at) VALUES "
 
 	args := make([]any, 0, len(events)*numFields)
 	for i, event := range events {
