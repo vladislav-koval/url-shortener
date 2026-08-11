@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func Error(log *logger.Logger) grpc.UnaryServerInterceptor {
+func Error() grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context,
 		req any,
@@ -24,7 +24,7 @@ func Error(log *logger.Logger) grpc.UnaryServerInterceptor {
 			return resp, nil
 		}
 
-		return nil, handleError(log, info.FullMethod, err)
+		return nil, handleError(logger.FromContext(ctx), info.FullMethod, err)
 	}
 }
 

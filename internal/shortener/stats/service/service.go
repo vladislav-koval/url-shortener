@@ -5,18 +5,25 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/vladislav-koval/url-shortener/internal/platform/pagination"
+	"github.com/vladislav-koval/url-shortener/internal/shortener/stats/domain"
 )
 
 type Service struct {
 	repository Repository
+	grpcClient GRPCClient
 }
 
 type Repository interface {
 	GetShortCodesByUserID(ctx context.Context, userID uuid.UUID, p pagination.Pagination) ([]string, int, error)
 }
 
-func NewService(r Repository) *Service {
+type GRPCClient interface {
+	GetClickCounts(ctx context.Context, shortCodes []string) ([]domain.LinkClickCount, error)
+}
+
+func NewService(repository Repository, grpcClient GRPCClient) *Service {
 	return &Service{
-		repository: r,
+		repository: repository,
+		grpcClient: grpcClient,
 	}
 }

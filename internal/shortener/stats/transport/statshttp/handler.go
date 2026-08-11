@@ -31,7 +31,7 @@ func (h *Handler) Routes(resolver authorization.Resolver, cookieSecure bool) []s
 			Method:     "GET",
 			Path:       "/clicks",
 			Handler:    h.GetClickCounts,
-			Middleware: []middleware.Middleware{middleware.CurrentUser(resolver, cookieSecure)},
+			Middleware: []middleware.Middleware{middleware.CurrentUser(resolver, cookieSecure), middleware.RequireUser()},
 		},
 	}
 }

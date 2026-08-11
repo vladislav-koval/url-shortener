@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"github.com/vladislav-koval/url-shortener/internal/analytics/clicks"
 	"github.com/vladislav-koval/url-shortener/internal/analytics/clicks/consumer"
 	"github.com/vladislav-koval/url-shortener/internal/analytics/stats"
@@ -53,12 +54,16 @@ func main() {
 		runners[i] = c.Run
 	}
 
-	grpcServer := server.NewGRPCServer(
-		server.NewConfigMust(),
+	grpcServer := grpcserver.NewGRPCServer(
+		grpcserver.NewConfigMust(),
 		log,
 		interceptor.Validation(),
-		interceptor.Error(log),
 		interceptor.Logger(log),
+		interceptor.Error(),
+		logging.UnaryServerInterceptor(
+			interceptor.Logging(),
+			logging.WithLogOnEvents(logging.PayloadReceived, logging.PayloadSent),
+		),
 		interceptor.Panic(),
 	)
 

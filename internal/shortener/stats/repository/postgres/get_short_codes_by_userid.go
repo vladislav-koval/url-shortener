@@ -5,10 +5,11 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+	"github.com/vladislav-koval/url-shortener/internal/platform/pagination"
 )
 
-func (repo *Repository) GetShortCodesByUserID(userID uuid.UUID, limit, offset int) ([]string, int, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), repo.pool.OpTimeout())
+func (repo *Repository) GetShortCodesByUserID(ctx context.Context, userID uuid.UUID, p pagination.Pagination) ([]string, int, error) {
+	ctx, cancel := context.WithTimeout(ctx, repo.pool.OpTimeout())
 	defer cancel()
 
 	queryCount := `
@@ -32,13 +33,13 @@ func (repo *Repository) GetShortCodesByUserID(userID uuid.UUID, limit, offset in
 				OFFSET $3;
 	`
 
-	rows, err := repo.pool.Query(ctx, query, userID, limit, offset)
+	rows, err := repo.pool.Query(ctx, query, userID, p.Limit, p.Offset)
 	if err != nil {
 		return nil, 0, fmt.Errorf("select short codes: %w", err)
 	}
 	defer rows.Close()
 
-	shortCodes := make([]string, limit)
+	shortCodes := make([]string, 0, p.Limit)
 
 	for rows.Next() {
 		var shortCode string

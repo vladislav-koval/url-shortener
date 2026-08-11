@@ -103,5 +103,8 @@ proto-breaking: ## Проверить breaking changes относительно 
 
 .PHONY: proto-check
 proto-check: proto ## CI-проверка: сгенерённый код не разошёлся с .proto
-	git diff --exit-code api/gen || \
-		(echo "api/gen out of sync with .proto files — run 'make proto' and commit" && exit 1)
+	@if [ -n "$$(git status --porcelain api/gen)" ]; then \
+		echo "api/gen out of sync with .proto files — run 'make proto' and commit" && \
+		git status --porcelain api/gen && \
+		exit 1; \
+	fi

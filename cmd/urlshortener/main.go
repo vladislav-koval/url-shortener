@@ -13,9 +13,11 @@ import (
 	"github.com/vladislav-koval/url-shortener/internal/platform/repository/postgres/pool/pgx"
 	"github.com/vladislav-koval/url-shortener/internal/platform/repository/redis/goredis"
 	"github.com/vladislav-koval/url-shortener/internal/platform/shutdown"
+	"github.com/vladislav-koval/url-shortener/internal/platform/transport/grpc/client"
 	"github.com/vladislav-koval/url-shortener/internal/platform/transport/http/middleware"
 	"github.com/vladislav-koval/url-shortener/internal/platform/transport/http/server"
 	"github.com/vladislav-koval/url-shortener/internal/shortener/auth"
+	"github.com/vladislav-koval/url-shortener/internal/shortener/stats"
 	"github.com/vladislav-koval/url-shortener/internal/shortener/urls"
 	"github.com/vladislav-koval/url-shortener/internal/shortener/urls/producer"
 	"go.uber.org/zap"
@@ -44,6 +46,12 @@ func main() {
 		log.Fatal("failed to init redis client", zap.Error(err))
 	}
 
+	log.Debug("initializing GRPC client")
+	grpcClient, err := grpcclient.NewGRPCClient(grpcclient.NewConfigMust())
+	if err != nil {
+		log.Fatal("failed to init grpc client", zap.Error(err))
+	}
+
 	log.Debug("initializing kafka click writer")
 	recorderConfig := producer.NewConfigMust()
 	clickWriter := segmentio.NewWriter(
@@ -66,6 +74,9 @@ func main() {
 	log.Debug("initializing feature", zap.String("feature", "auth"))
 	authModule := auth.NewModule(pgxPool, redisClient, authorizationCfg.CookieSecure)
 
+	log.Debug("initializing feature", zap.String("feature", "stats"))
+	statsModule := stats.NewModule(pgxPool, grpcClient.Conn())
+
 	log.Debug("initializing HTTP server")
 	httpConfig := server.NewConfigMust()
 	httpServer := server.NewHTTPServer(
@@ -80,6 +91,7 @@ func main() {
 
 	httpServer.RegisterRoutes(shortenerModule.Handler.Routes(authModule.SessionResolver, authorizationCfg.CookieSecure)...)
 	httpServer.RegisterRoutes(authModule.Handler.Routes()...)
+	httpServer.RegisterRoutes(statsModule.Handler.Routes(authModule.SessionResolver, authorizationCfg.CookieSecure)...)
 
 	shutdown.Run(
 		ctx,
@@ -94,6 +106,11 @@ func main() {
 		func(shutdownCtx context.Context) {
 			if err := clickWriter.Shutdown(shutdownCtx); err != nil {
 				log.Error("failed to shutdown kafka click writer", zap.Error(err))
+			}
+		},
+		func(context.Context) {
+			if err := grpcClient.Close(); err != nil {
+				log.Error("failed to close grpc client", zap.Error(err))
 			}
 		},
 		func(context.Context) {
