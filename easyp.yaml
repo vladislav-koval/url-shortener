@@ -31,7 +31,12 @@ lint:
     # Minimal
     - DIRECTORY_SAME_PACKAGE
     - PACKAGE_DEFINED
-    - PACKAGE_DIRECTORY_MATCH
+    # PACKAGE_DIRECTORY_MATCH — не включаем:
+    # EasyP сейчас захардкоживает Root="." в rules/builder.go
+    # и не учитывает generate.inputs.directory как proto root.
+    # Поэтому для api/proto/analytics/v1/analytics.proto
+    # правило ожидает package api.proto.analytics.v1 вместо analytics.v1.
+    # Настроить root через easyp.yaml сейчас нельзя.
     - PACKAGE_SAME_DIRECTORY
 
     # Basic

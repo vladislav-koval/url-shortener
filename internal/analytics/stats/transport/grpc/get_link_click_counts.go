@@ -7,7 +7,7 @@ import (
 	analyticsv1 "github.com/vladislav-koval/url-shortener/api/gen/analytics/v1"
 )
 
-func (s *Handler) GetLinkClickCounts(ctx context.Context, req *analyticsv1.GetClickCountsRequest) (*analyticsv1.GetClickCountsResponse, error) {
+func (s *Handler) GetLinkClickCounts(ctx context.Context, req *analyticsv1.GetLinkClickCountsRequest) (*analyticsv1.GetLinkClickCountsResponse, error) {
 	linkClickCounts, err := s.service.GetLinkClickCount(ctx, req.GetShortCodes())
 	if err != nil {
 		return nil, fmt.Errorf("error getting link click counts: %w", err)
@@ -22,7 +22,7 @@ func (s *Handler) GetLinkClickCounts(ctx context.Context, req *analyticsv1.GetCl
 		})
 	}
 
-	return &analyticsv1.GetClickCountsResponse{
+	return &analyticsv1.GetLinkClickCountsResponse{
 		Counts: counts,
 	}, nil
 }

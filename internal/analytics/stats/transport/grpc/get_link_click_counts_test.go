@@ -38,7 +38,7 @@ func TestGetLinkClickCounts(t *testing.T) {
 			}, nil).
 			Times(1)
 
-		resp, err := handler.GetLinkClickCounts(context.Background(), &analyticsv1.GetClickCountsRequest{ShortCodes: inputShortCodes})
+		resp, err := handler.GetLinkClickCounts(context.Background(), &analyticsv1.GetLinkClickCountsRequest{ShortCodes: inputShortCodes})
 
 		assert.NoError(t, err)
 		assert.Equal(t, []*analyticsv1.LinkClickCount{
@@ -55,7 +55,7 @@ func TestGetLinkClickCounts(t *testing.T) {
 			Return(nil, errors.New("something went wrong")).
 			Times(1)
 
-		resp, err := handler.GetLinkClickCounts(context.Background(), &analyticsv1.GetClickCountsRequest{ShortCodes: inputShortCodes})
+		resp, err := handler.GetLinkClickCounts(context.Background(), &analyticsv1.GetLinkClickCountsRequest{ShortCodes: inputShortCodes})
 
 		assert.Nil(t, resp)
 		assert.EqualError(t, err, "error getting link click counts: something went wrong")

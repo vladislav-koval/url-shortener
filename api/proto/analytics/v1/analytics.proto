@@ -7,10 +7,10 @@ import "validate/validate.proto";
 option go_package = "github.com/vladislav-koval/url-shortener/api/gen/analytics/v1;analyticsv1";
 
 service AnalyticsService {
-  rpc GetLinkClickCounts(GetClickCountsRequest) returns (GetClickCountsResponse);
+  rpc GetLinkClickCounts(GetLinkClickCountsRequest) returns (GetLinkClickCountsResponse);
 }
 
-message GetClickCountsRequest {
+message GetLinkClickCountsRequest {
   repeated string short_codes = 1 [
     (validate.rules).repeated = {
       min_items: 1
@@ -31,6 +31,6 @@ message LinkClickCount {
   int64 click_count = 2;
 }
 
-message GetClickCountsResponse {
+message GetLinkClickCountsResponse {
   repeated LinkClickCount counts = 1;
 }

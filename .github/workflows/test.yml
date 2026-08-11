@@ -26,6 +26,9 @@ jobs:
       - name: Install proto tools
         run: make tools
 
+      - name: Lint proto files
+        run: make proto-lint
+
       - name: Check generated proto code is up to date
         run: make proto-check
 

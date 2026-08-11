@@ -43,14 +43,14 @@ func (m *MockAnalyticsServiceClient) EXPECT() *MockAnalyticsServiceClientMockRec
 }
 
 // GetLinkClickCounts mocks base method.
-func (m *MockAnalyticsServiceClient) GetLinkClickCounts(ctx context.Context, in *analyticsv1.GetClickCountsRequest, opts ...grpc.CallOption) (*analyticsv1.GetClickCountsResponse, error) {
+func (m *MockAnalyticsServiceClient) GetLinkClickCounts(ctx context.Context, in *analyticsv1.GetLinkClickCountsRequest, opts ...grpc.CallOption) (*analyticsv1.GetLinkClickCountsResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "GetLinkClickCounts", varargs...)
-	ret0, _ := ret[0].(*analyticsv1.GetClickCountsResponse)
+	ret0, _ := ret[0].(*analyticsv1.GetLinkClickCountsResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

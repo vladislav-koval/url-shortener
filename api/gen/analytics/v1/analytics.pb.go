@@ -22,27 +22,27 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type GetClickCountsRequest struct {
+type GetLinkClickCountsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ShortCodes    []string               `protobuf:"bytes,1,rep,name=short_codes,json=shortCodes,proto3" json:"short_codes,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetClickCountsRequest) Reset() {
-	*x = GetClickCountsRequest{}
+func (x *GetLinkClickCountsRequest) Reset() {
+	*x = GetLinkClickCountsRequest{}
 	mi := &file_api_proto_analytics_v1_analytics_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetClickCountsRequest) String() string {
+func (x *GetLinkClickCountsRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetClickCountsRequest) ProtoMessage() {}
+func (*GetLinkClickCountsRequest) ProtoMessage() {}
 
-func (x *GetClickCountsRequest) ProtoReflect() protoreflect.Message {
+func (x *GetLinkClickCountsRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_api_proto_analytics_v1_analytics_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -54,12 +54,12 @@ func (x *GetClickCountsRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetClickCountsRequest.ProtoReflect.Descriptor instead.
-func (*GetClickCountsRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetLinkClickCountsRequest.ProtoReflect.Descriptor instead.
+func (*GetLinkClickCountsRequest) Descriptor() ([]byte, []int) {
 	return file_api_proto_analytics_v1_analytics_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *GetClickCountsRequest) GetShortCodes() []string {
+func (x *GetLinkClickCountsRequest) GetShortCodes() []string {
 	if x != nil {
 		return x.ShortCodes
 	}
@@ -118,27 +118,27 @@ func (x *LinkClickCount) GetClickCount() int64 {
 	return 0
 }
 
-type GetClickCountsResponse struct {
+type GetLinkClickCountsResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Counts        []*LinkClickCount      `protobuf:"bytes,1,rep,name=counts,proto3" json:"counts,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetClickCountsResponse) Reset() {
-	*x = GetClickCountsResponse{}
+func (x *GetLinkClickCountsResponse) Reset() {
+	*x = GetLinkClickCountsResponse{}
 	mi := &file_api_proto_analytics_v1_analytics_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetClickCountsResponse) String() string {
+func (x *GetLinkClickCountsResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetClickCountsResponse) ProtoMessage() {}
+func (*GetLinkClickCountsResponse) ProtoMessage() {}
 
-func (x *GetClickCountsResponse) ProtoReflect() protoreflect.Message {
+func (x *GetLinkClickCountsResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_api_proto_analytics_v1_analytics_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -150,12 +150,12 @@ func (x *GetClickCountsResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetClickCountsResponse.ProtoReflect.Descriptor instead.
-func (*GetClickCountsResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetLinkClickCountsResponse.ProtoReflect.Descriptor instead.
+func (*GetLinkClickCountsResponse) Descriptor() ([]byte, []int) {
 	return file_api_proto_analytics_v1_analytics_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *GetClickCountsResponse) GetCounts() []*LinkClickCount {
+func (x *GetLinkClickCountsResponse) GetCounts() []*LinkClickCount {
 	if x != nil {
 		return x.Counts
 	}
@@ -166,8 +166,8 @@ var File_api_proto_analytics_v1_analytics_proto protoreflect.FileDescriptor
 
 const file_api_proto_analytics_v1_analytics_proto_rawDesc = "" +
 	"\n" +
-	"&api/proto/analytics/v1/analytics.proto\x12\fanalytics.v1\x1a\x17validate/validate.proto\"N\n" +
-	"\x15GetClickCountsRequest\x125\n" +
+	"&api/proto/analytics/v1/analytics.proto\x12\fanalytics.v1\x1a\x17validate/validate.proto\"R\n" +
+	"\x19GetLinkClickCountsRequest\x125\n" +
 	"\vshort_codes\x18\x01 \x03(\tB\x14\xfaB\x11\x92\x01\x0e\b\x01\x10d\x18\x01\"\x06r\x04\x10\x01\x18\n" +
 	"R\n" +
 	"shortCodes\"P\n" +
@@ -175,11 +175,11 @@ const file_api_proto_analytics_v1_analytics_proto_rawDesc = "" +
 	"\n" +
 	"short_code\x18\x01 \x01(\tR\tshortCode\x12\x1f\n" +
 	"\vclick_count\x18\x02 \x01(\x03R\n" +
-	"clickCount\"N\n" +
-	"\x16GetClickCountsResponse\x124\n" +
-	"\x06counts\x18\x01 \x03(\v2\x1c.analytics.v1.LinkClickCountR\x06counts2s\n" +
-	"\x10AnalyticsService\x12_\n" +
-	"\x12GetLinkClickCounts\x12#.analytics.v1.GetClickCountsRequest\x1a$.analytics.v1.GetClickCountsResponseBKZIgithub.com/vladislav-koval/url-shortener/api/gen/analytics/v1;analyticsv1b\x06proto3"
+	"clickCount\"R\n" +
+	"\x1aGetLinkClickCountsResponse\x124\n" +
+	"\x06counts\x18\x01 \x03(\v2\x1c.analytics.v1.LinkClickCountR\x06counts2{\n" +
+	"\x10AnalyticsService\x12g\n" +
+	"\x12GetLinkClickCounts\x12'.analytics.v1.GetLinkClickCountsRequest\x1a(.analytics.v1.GetLinkClickCountsResponseBKZIgithub.com/vladislav-koval/url-shortener/api/gen/analytics/v1;analyticsv1b\x06proto3"
 
 var (
 	file_api_proto_analytics_v1_analytics_proto_rawDescOnce sync.Once
@@ -195,14 +195,14 @@ func file_api_proto_analytics_v1_analytics_proto_rawDescGZIP() []byte {
 
 var file_api_proto_analytics_v1_analytics_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_api_proto_analytics_v1_analytics_proto_goTypes = []any{
-	(*GetClickCountsRequest)(nil),  // 0: analytics.v1.GetClickCountsRequest
-	(*LinkClickCount)(nil),         // 1: analytics.v1.LinkClickCount
-	(*GetClickCountsResponse)(nil), // 2: analytics.v1.GetClickCountsResponse
+	(*GetLinkClickCountsRequest)(nil),  // 0: analytics.v1.GetLinkClickCountsRequest
+	(*LinkClickCount)(nil),             // 1: analytics.v1.LinkClickCount
+	(*GetLinkClickCountsResponse)(nil), // 2: analytics.v1.GetLinkClickCountsResponse
 }
 var file_api_proto_analytics_v1_analytics_proto_depIdxs = []int32{
-	1, // 0: analytics.v1.GetClickCountsResponse.counts:type_name -> analytics.v1.LinkClickCount
-	0, // 1: analytics.v1.AnalyticsService.GetLinkClickCounts:input_type -> analytics.v1.GetClickCountsRequest
-	2, // 2: analytics.v1.AnalyticsService.GetLinkClickCounts:output_type -> analytics.v1.GetClickCountsResponse
+	1, // 0: analytics.v1.GetLinkClickCountsResponse.counts:type_name -> analytics.v1.LinkClickCount
+	0, // 1: analytics.v1.AnalyticsService.GetLinkClickCounts:input_type -> analytics.v1.GetLinkClickCountsRequest
+	2, // 2: analytics.v1.AnalyticsService.GetLinkClickCounts:output_type -> analytics.v1.GetLinkClickCountsResponse
 	2, // [2:3] is the sub-list for method output_type
 	1, // [1:2] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name

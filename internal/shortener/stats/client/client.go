@@ -25,7 +25,7 @@ func NewClient(grpcConn grpc.ClientConnInterface) *Client {
 func (gc *Client) GetClickCounts(ctx context.Context, shortCodes []string) ([]domain.LinkClickCount, error) {
 	res, err := gc.client.GetLinkClickCounts(
 		ctx,
-		&analyticsv1.GetClickCountsRequest{
+		&analyticsv1.GetLinkClickCountsRequest{
 			ShortCodes: shortCodes,
 		},
 	)
@@ -37,7 +37,7 @@ func (gc *Client) GetClickCounts(ctx context.Context, shortCodes []string) ([]do
 	return statsFromProto(res), nil
 }
 
-func statsFromProto(stats *analyticsv1.GetClickCountsResponse) []domain.LinkClickCount {
+func statsFromProto(stats *analyticsv1.GetLinkClickCountsResponse) []domain.LinkClickCount {
 	if stats == nil {
 		return nil
 	}

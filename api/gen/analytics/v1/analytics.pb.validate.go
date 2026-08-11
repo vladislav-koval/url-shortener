@@ -35,22 +35,22 @@ var (
 	_ = sort.Sort
 )
 
-// Validate checks the field values on GetClickCountsRequest with the rules
+// Validate checks the field values on GetLinkClickCountsRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *GetClickCountsRequest) Validate() error {
+func (m *GetLinkClickCountsRequest) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on GetClickCountsRequest with the rules
-// defined in the proto definition for this message. If any rules are
+// ValidateAll checks the field values on GetLinkClickCountsRequest with the
+// rules defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// GetClickCountsRequestMultiError, or nil if none found.
-func (m *GetClickCountsRequest) ValidateAll() error {
+// GetLinkClickCountsRequestMultiError, or nil if none found.
+func (m *GetLinkClickCountsRequest) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *GetClickCountsRequest) validate(all bool) error {
+func (m *GetLinkClickCountsRequest) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -58,7 +58,7 @@ func (m *GetClickCountsRequest) validate(all bool) error {
 	var errors []error
 
 	if l := len(m.GetShortCodes()); l < 1 || l > 100 {
-		err := GetClickCountsRequestValidationError{
+		err := GetLinkClickCountsRequestValidationError{
 			field:  "ShortCodes",
 			reason: "value must contain between 1 and 100 items, inclusive",
 		}
@@ -68,13 +68,13 @@ func (m *GetClickCountsRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	_GetClickCountsRequest_ShortCodes_Unique := make(map[string]struct{}, len(m.GetShortCodes()))
+	_GetLinkClickCountsRequest_ShortCodes_Unique := make(map[string]struct{}, len(m.GetShortCodes()))
 
 	for idx, item := range m.GetShortCodes() {
 		_, _ = idx, item
 
-		if _, exists := _GetClickCountsRequest_ShortCodes_Unique[item]; exists {
-			err := GetClickCountsRequestValidationError{
+		if _, exists := _GetLinkClickCountsRequest_ShortCodes_Unique[item]; exists {
+			err := GetLinkClickCountsRequestValidationError{
 				field:  fmt.Sprintf("ShortCodes[%v]", idx),
 				reason: "repeated value must contain unique items",
 			}
@@ -83,11 +83,11 @@ func (m *GetClickCountsRequest) validate(all bool) error {
 			}
 			errors = append(errors, err)
 		} else {
-			_GetClickCountsRequest_ShortCodes_Unique[item] = struct{}{}
+			_GetLinkClickCountsRequest_ShortCodes_Unique[item] = struct{}{}
 		}
 
 		if l := utf8.RuneCountInString(item); l < 1 || l > 10 {
-			err := GetClickCountsRequestValidationError{
+			err := GetLinkClickCountsRequestValidationError{
 				field:  fmt.Sprintf("ShortCodes[%v]", idx),
 				reason: "value length must be between 1 and 10 runes, inclusive",
 			}
@@ -100,19 +100,19 @@ func (m *GetClickCountsRequest) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return GetClickCountsRequestMultiError(errors)
+		return GetLinkClickCountsRequestMultiError(errors)
 	}
 
 	return nil
 }
 
-// GetClickCountsRequestMultiError is an error wrapping multiple validation
-// errors returned by GetClickCountsRequest.ValidateAll() if the designated
-// constraints aren't met.
-type GetClickCountsRequestMultiError []error
+// GetLinkClickCountsRequestMultiError is an error wrapping multiple validation
+// errors returned by GetLinkClickCountsRequest.ValidateAll() if the
+// designated constraints aren't met.
+type GetLinkClickCountsRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m GetClickCountsRequestMultiError) Error() string {
+func (m GetLinkClickCountsRequestMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -121,11 +121,11 @@ func (m GetClickCountsRequestMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m GetClickCountsRequestMultiError) AllErrors() []error { return m }
+func (m GetLinkClickCountsRequestMultiError) AllErrors() []error { return m }
 
-// GetClickCountsRequestValidationError is the validation error returned by
-// GetClickCountsRequest.Validate if the designated constraints aren't met.
-type GetClickCountsRequestValidationError struct {
+// GetLinkClickCountsRequestValidationError is the validation error returned by
+// GetLinkClickCountsRequest.Validate if the designated constraints aren't met.
+type GetLinkClickCountsRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -133,24 +133,24 @@ type GetClickCountsRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e GetClickCountsRequestValidationError) Field() string { return e.field }
+func (e GetLinkClickCountsRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e GetClickCountsRequestValidationError) Reason() string { return e.reason }
+func (e GetLinkClickCountsRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e GetClickCountsRequestValidationError) Cause() error { return e.cause }
+func (e GetLinkClickCountsRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e GetClickCountsRequestValidationError) Key() bool { return e.key }
+func (e GetLinkClickCountsRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e GetClickCountsRequestValidationError) ErrorName() string {
-	return "GetClickCountsRequestValidationError"
+func (e GetLinkClickCountsRequestValidationError) ErrorName() string {
+	return "GetLinkClickCountsRequestValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e GetClickCountsRequestValidationError) Error() string {
+func (e GetLinkClickCountsRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -162,14 +162,14 @@ func (e GetClickCountsRequestValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sGetClickCountsRequest.%s: %s%s",
+		"invalid %sGetLinkClickCountsRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = GetClickCountsRequestValidationError{}
+var _ error = GetLinkClickCountsRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -177,7 +177,7 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = GetClickCountsRequestValidationError{}
+} = GetLinkClickCountsRequestValidationError{}
 
 // Validate checks the field values on LinkClickCount with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
@@ -283,22 +283,22 @@ var _ interface {
 	ErrorName() string
 } = LinkClickCountValidationError{}
 
-// Validate checks the field values on GetClickCountsResponse with the rules
-// defined in the proto definition for this message. If any rules are
+// Validate checks the field values on GetLinkClickCountsResponse with the
+// rules defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *GetClickCountsResponse) Validate() error {
+func (m *GetLinkClickCountsResponse) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on GetClickCountsResponse with the rules
-// defined in the proto definition for this message. If any rules are
+// ValidateAll checks the field values on GetLinkClickCountsResponse with the
+// rules defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// GetClickCountsResponseMultiError, or nil if none found.
-func (m *GetClickCountsResponse) ValidateAll() error {
+// GetLinkClickCountsResponseMultiError, or nil if none found.
+func (m *GetLinkClickCountsResponse) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *GetClickCountsResponse) validate(all bool) error {
+func (m *GetLinkClickCountsResponse) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -312,7 +312,7 @@ func (m *GetClickCountsResponse) validate(all bool) error {
 			switch v := interface{}(item).(type) {
 			case interface{ ValidateAll() error }:
 				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, GetClickCountsResponseValidationError{
+					errors = append(errors, GetLinkClickCountsResponseValidationError{
 						field:  fmt.Sprintf("Counts[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
@@ -320,7 +320,7 @@ func (m *GetClickCountsResponse) validate(all bool) error {
 				}
 			case interface{ Validate() error }:
 				if err := v.Validate(); err != nil {
-					errors = append(errors, GetClickCountsResponseValidationError{
+					errors = append(errors, GetLinkClickCountsResponseValidationError{
 						field:  fmt.Sprintf("Counts[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
@@ -329,7 +329,7 @@ func (m *GetClickCountsResponse) validate(all bool) error {
 			}
 		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
-				return GetClickCountsResponseValidationError{
+				return GetLinkClickCountsResponseValidationError{
 					field:  fmt.Sprintf("Counts[%v]", idx),
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -340,19 +340,19 @@ func (m *GetClickCountsResponse) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return GetClickCountsResponseMultiError(errors)
+		return GetLinkClickCountsResponseMultiError(errors)
 	}
 
 	return nil
 }
 
-// GetClickCountsResponseMultiError is an error wrapping multiple validation
-// errors returned by GetClickCountsResponse.ValidateAll() if the designated
-// constraints aren't met.
-type GetClickCountsResponseMultiError []error
+// GetLinkClickCountsResponseMultiError is an error wrapping multiple
+// validation errors returned by GetLinkClickCountsResponse.ValidateAll() if
+// the designated constraints aren't met.
+type GetLinkClickCountsResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m GetClickCountsResponseMultiError) Error() string {
+func (m GetLinkClickCountsResponseMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -361,11 +361,11 @@ func (m GetClickCountsResponseMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m GetClickCountsResponseMultiError) AllErrors() []error { return m }
+func (m GetLinkClickCountsResponseMultiError) AllErrors() []error { return m }
 
-// GetClickCountsResponseValidationError is the validation error returned by
-// GetClickCountsResponse.Validate if the designated constraints aren't met.
-type GetClickCountsResponseValidationError struct {
+// GetLinkClickCountsResponseValidationError is the validation error returned
+// by GetLinkClickCountsResponse.Validate if the designated constraints aren't met.
+type GetLinkClickCountsResponseValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -373,24 +373,24 @@ type GetClickCountsResponseValidationError struct {
 }
 
 // Field function returns field value.
-func (e GetClickCountsResponseValidationError) Field() string { return e.field }
+func (e GetLinkClickCountsResponseValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e GetClickCountsResponseValidationError) Reason() string { return e.reason }
+func (e GetLinkClickCountsResponseValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e GetClickCountsResponseValidationError) Cause() error { return e.cause }
+func (e GetLinkClickCountsResponseValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e GetClickCountsResponseValidationError) Key() bool { return e.key }
+func (e GetLinkClickCountsResponseValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e GetClickCountsResponseValidationError) ErrorName() string {
-	return "GetClickCountsResponseValidationError"
+func (e GetLinkClickCountsResponseValidationError) ErrorName() string {
+	return "GetLinkClickCountsResponseValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e GetClickCountsResponseValidationError) Error() string {
+func (e GetLinkClickCountsResponseValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -402,14 +402,14 @@ func (e GetClickCountsResponseValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sGetClickCountsResponse.%s: %s%s",
+		"invalid %sGetLinkClickCountsResponse.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = GetClickCountsResponseValidationError{}
+var _ error = GetLinkClickCountsResponseValidationError{}
 
 var _ interface {
 	Field() string
@@ -417,4 +417,4 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = GetClickCountsResponseValidationError{}
+} = GetLinkClickCountsResponseValidationError{}

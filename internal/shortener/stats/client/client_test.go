@@ -31,8 +31,8 @@ func TestGetClickCounts(t *testing.T) {
 		analyticsClient, client := initTest(t)
 
 		analyticsClient.EXPECT().
-			GetLinkClickCounts(gomock.Any(), &analyticsv1.GetClickCountsRequest{ShortCodes: inputShortCodes}).
-			Return(&analyticsv1.GetClickCountsResponse{
+			GetLinkClickCounts(gomock.Any(), &analyticsv1.GetLinkClickCountsRequest{ShortCodes: inputShortCodes}).
+			Return(&analyticsv1.GetLinkClickCountsResponse{
 				Counts: []*analyticsv1.LinkClickCount{
 					{ShortCode: "codeOne", ClickCount: 3},
 					{ShortCode: "codeTwo", ClickCount: 0},
@@ -53,8 +53,8 @@ func TestGetClickCounts(t *testing.T) {
 		analyticsClient, client := initTest(t)
 
 		analyticsClient.EXPECT().
-			GetLinkClickCounts(gomock.Any(), &analyticsv1.GetClickCountsRequest{ShortCodes: inputShortCodes}).
-			Return(&analyticsv1.GetClickCountsResponse{
+			GetLinkClickCounts(gomock.Any(), &analyticsv1.GetLinkClickCountsRequest{ShortCodes: inputShortCodes}).
+			Return(&analyticsv1.GetLinkClickCountsResponse{
 				Counts: []*analyticsv1.LinkClickCount{
 					{ShortCode: "codeOne", ClickCount: 3},
 					nil,
@@ -72,7 +72,7 @@ func TestGetClickCounts(t *testing.T) {
 		analyticsClient, client := initTest(t)
 
 		analyticsClient.EXPECT().
-			GetLinkClickCounts(gomock.Any(), &analyticsv1.GetClickCountsRequest{ShortCodes: inputShortCodes}).
+			GetLinkClickCounts(gomock.Any(), &analyticsv1.GetLinkClickCountsRequest{ShortCodes: inputShortCodes}).
 			Return(nil, errors.New("rpc error: code = Unavailable")).
 			Times(1)
 

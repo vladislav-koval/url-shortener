@@ -26,7 +26,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AnalyticsServiceClient interface {
-	GetLinkClickCounts(ctx context.Context, in *GetClickCountsRequest, opts ...grpc.CallOption) (*GetClickCountsResponse, error)
+	GetLinkClickCounts(ctx context.Context, in *GetLinkClickCountsRequest, opts ...grpc.CallOption) (*GetLinkClickCountsResponse, error)
 }
 
 type analyticsServiceClient struct {
@@ -37,9 +37,9 @@ func NewAnalyticsServiceClient(cc grpc.ClientConnInterface) AnalyticsServiceClie
 	return &analyticsServiceClient{cc}
 }
 
-func (c *analyticsServiceClient) GetLinkClickCounts(ctx context.Context, in *GetClickCountsRequest, opts ...grpc.CallOption) (*GetClickCountsResponse, error) {
+func (c *analyticsServiceClient) GetLinkClickCounts(ctx context.Context, in *GetLinkClickCountsRequest, opts ...grpc.CallOption) (*GetLinkClickCountsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetClickCountsResponse)
+	out := new(GetLinkClickCountsResponse)
 	err := c.cc.Invoke(ctx, AnalyticsService_GetLinkClickCounts_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -51,7 +51,7 @@ func (c *analyticsServiceClient) GetLinkClickCounts(ctx context.Context, in *Get
 // All implementations must embed UnimplementedAnalyticsServiceServer
 // for forward compatibility.
 type AnalyticsServiceServer interface {
-	GetLinkClickCounts(context.Context, *GetClickCountsRequest) (*GetClickCountsResponse, error)
+	GetLinkClickCounts(context.Context, *GetLinkClickCountsRequest) (*GetLinkClickCountsResponse, error)
 	mustEmbedUnimplementedAnalyticsServiceServer()
 }
 
@@ -62,7 +62,7 @@ type AnalyticsServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedAnalyticsServiceServer struct{}
 
-func (UnimplementedAnalyticsServiceServer) GetLinkClickCounts(context.Context, *GetClickCountsRequest) (*GetClickCountsResponse, error) {
+func (UnimplementedAnalyticsServiceServer) GetLinkClickCounts(context.Context, *GetLinkClickCountsRequest) (*GetLinkClickCountsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetLinkClickCounts not implemented")
 }
 func (UnimplementedAnalyticsServiceServer) mustEmbedUnimplementedAnalyticsServiceServer() {}
@@ -87,7 +87,7 @@ func RegisterAnalyticsServiceServer(s grpc.ServiceRegistrar, srv AnalyticsServic
 }
 
 func _AnalyticsService_GetLinkClickCounts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetClickCountsRequest)
+	in := new(GetLinkClickCountsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func _AnalyticsService_GetLinkClickCounts_Handler(srv interface{}, ctx context.C
 		FullMethod: AnalyticsService_GetLinkClickCounts_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AnalyticsServiceServer).GetLinkClickCounts(ctx, req.(*GetClickCountsRequest))
+		return srv.(AnalyticsServiceServer).GetLinkClickCounts(ctx, req.(*GetLinkClickCountsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
