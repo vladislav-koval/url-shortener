@@ -84,6 +84,15 @@ func TestCreateShortLink(t *testing.T) {
 				assert.ErrorIs(t, err, apperrors.ErrConflict)
 			},
 		}, {
+			name:   "err user no longer exists",
+			userID: &inputUserID,
+			scanMock: func(dest ...interface{}) error {
+				return pool.ErrViolatesForeignKey
+			},
+			check: func(t *testing.T, _ domain.Link, err error) {
+				assert.ErrorIs(t, err, apperrors.ErrUnauthenticated)
+			},
+		}, {
 			name: "another error",
 			scanMock: func(dest ...interface{}) error {
 				return errors.New("something went wrong")

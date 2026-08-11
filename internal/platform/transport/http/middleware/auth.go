@@ -48,3 +48,24 @@ func CurrentUser(resolve authorization.Resolver, cookieSecure bool) Middleware {
 		})
 	}
 }
+
+func RequireUser() Middleware {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			userId := authorization.FromContext(r.Context())
+			if userId == nil {
+				log := logger.FromContext(r.Context())
+				responseHandler := response.NewHTTPResponseHandler(log, w)
+
+				responseHandler.ErrorResponse(
+					apperrors.ErrAuthorization,
+					"authentication required",
+				)
+
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
+}

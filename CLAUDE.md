@@ -6,21 +6,21 @@
 
 Укорачиватель ссылок на Go, разделённый на 2 независимых сервиса (2 бинарника, общий Go-модуль и общий `internal/`):
 
-- **`cmd/urlshortener`** (feature `internal/shortener/urls`) — создание короткого кода для URL, редирект по короткому коду, кеширование в Redis, публикация событий о переходах в Kafka.
-- **`cmd/analytics`** (feature `internal/analytics/clicks`) — потребляет эти события из Kafka и сохраняет клики в Postgres.
+- **`cmd/urlshortener`** (`internal/shortener/{urls,auth,stats}`) — создание короткого кода, редирект, кеш в Redis, Kafka-паблишинг кликов, Google-логин, `GET /clicks` (своя статистика: короткие коды из своей БД + счётчики кликов по grpc из `analytics`).
+- **`cmd/analytics`** (`internal/analytics/{clicks,stats}`) — консьюмит клики из Kafka в Postgres, отдаёт агрегаты по grpc (`AnalyticsService.GetLinkClickCounts`) для `urlshortener`.
 
-Просмотр аналитики по HTTP — ещё не реализован. Оба процесса запускаются локально (`make run` / `make run-analytics`) и подключаются к общей инфраструктуре из `docker-compose.yml` (Postgres/Redis/Kafka/migrate/port-forwarder); сами `urlshortener`/`analytics` в `docker-compose.yml` пока не описаны как отдельные сервисы/контейнеры.
+Оба процесса запускаются локально (`make run` / `make run-analytics`) и подключаются к общей инфраструктуре из `docker-compose.yml` (Postgres/Redis/Kafka/migrate/port-forwarder); сами `urlshortener`/`analytics` в `docker-compose.yml` пока не описаны как отдельные сервисы/контейнеры. **У `redis` в `docker-compose.yml` нет volume вообще** — кеш ссылок и сессии переживают рестарты только потому, что сам контейнер ни разу не пересоздавался; `docker rm`/полный `down` уничтожит всё без предупреждения, в отличие от Postgres/Kafka с именованными volume'ами (`env-cleanup` их и спрашивает отдельно).
 
 Учебный/pet-проект одного разработчика, не production-нагрузка, часто разворачивается на дешёвом сервере. Kafka-writer **не** использует `Async: true`/неограниченную очередь `kafka-go` — вместо этого свой батчинг поверх ограниченной очереди (`QueueSize`, `segmentio.Writer`). Осознанный компромисс в пользу "лучше потерять клик, чем уронить процесс OOM'ом" — на такой машине неограниченная очередь при недоступном брокере реальный риск, не гипотетический. Потери не безмолвные: `Writer.Dropped()` считает и переполнение очереди, и ошибки отправки в Kafka, фоновая горутина раз в интервал (не на каждый дроп — лог-шторм под нагрузкой) сбрасывает дельту в лог. Не считай ни ограниченную очередь, ни дропы багом — это документированное решение, см. "Ограничения".
 
 ## Стек
 
 - Go 1.26.1
-- Postgres 18 (`jackc/pgx/v5`) — `urlshortener.links` и `urlshortener.clicks`
+- Postgres 18 (`jackc/pgx/v5`) — `urlshortener.links`/`urlshortener.users` (shortener) и `analytics.clicks` (analytics), отдельная схема на сервис в одной физической БД — чтобы по ошибке не залезть в чужую таблицу с другой стороны grpc-границы. FK между сервисами нет и не будет: `clicks.short_code` сознательно не `REFERENCES` на `links` (иначе Kafka-consumer в analytics не смог бы писать клики без сихронного похода в чужую схему)
 - Redis 8 (`redis/go-redis/v9`) — кеш поверх Postgres для ссылок
 - Kafka 4.3, KRaft, один брокер (`segmentio/kafka-go`), топик создаётся с 3 партициями (`make kafka-topic-init`, `Makefile`)
 - `go.uber.org/zap`, `kelseyhightower/envconfig`, `go-playground/validator/v10`, `golang-migrate`
-- Тесты: `stretchr/testify` (ассерты) + `go.uber.org/mock`/`mockgen` (моки). Юнитами покрыты `shortener/urls/service`, `shortener/urls/repository/postgres`, `shortener/urls/repository/cached`, `platform/repository/postgres/pool/pgx`, `platform/repository/redis/goredis`, `platform/messaging/gokafka/segmentio` — см. раздел "Тестирование" про паттерны. Не покрыты: `platform/transport/http/response`, `shortener/urls/domain` (только косвенно через `service`), `platform/apperrors`, весь `analytics/*` (`clicks`, `clicks/consumer`, `clicks/repository/postgres`), `shortener/urls/transport/shortenerhttp`, `shortener/urls/producer`, голый интерфейс `platform/messaging/gokafka`, `platform/shutdown` (новый оркестратор запуска/остановки, добавлен без тестов). CI (`.github/workflows/test.yml`: `go test -v -coverprofile=... ./...` на push/PR в `main`/`master`, отчёт покрытия в step summary, моки исключены из подсчёта) БД/Redis/Kafka не поднимает — тесты, требующие реальной инфры, там сломаются, если их добавить без `testcontainers-go` (см. "Тестирование"). Линтера кроме `go vet`/`gofmt` нет — в CI линтер не настроен.
+- Тесты: `stretchr/testify` (ассерты) + `go.uber.org/mock`/`mockgen` (моки). Юнитами покрыты `shortener/urls/service`, `shortener/urls/repository/postgres`, `shortener/urls/repository/cached`, `platform/repository/postgres/pool/pgx`, `platform/repository/redis/goredis`, `platform/messaging/gokafka/segmentio`, `analytics/stats/{service,repository/postgres,transport/grpc}`, `shortener/stats/{service,repository/postgres,client}` (grpc-клиент замокан reflect-режимом на `analyticsv1.AnalyticsServiceClient`, без реального сервера) — см. раздел "Тестирование" про паттерны. Не покрыты: `platform/transport/http/response`, `shortener/urls/domain` (только косвенно через `service`), `platform/apperrors`, `analytics/clicks/*` (`clicks`, `clicks/consumer`, `clicks/repository/postgres`), весь HTTP-транспорт (`shortener/urls/transport/shortenerhttp`, `shortener/stats/transport/statshttp`, `shortener/auth/transport/authhttp`), `shortener/urls/producer`, голый интерфейс `platform/messaging/gokafka`, `platform/shutdown`, `platform/transport/grpc/{server,client}` (оркестрация с реальными сетевыми примитивами — территория `testcontainers-go`, ещё не подключён). CI (`.github/workflows/test.yml`) — 2 джобы: `proto-check` (`make tools` → `make proto-lint` → `make proto-check`) блокирует `run-tests` через `needs:`; `go test -v -coverprofile=... ./...` на push/PR в `main`/`master`, отчёт покрытия в step summary, моки исключены из подсчёта. БД/Redis/Kafka не поднимает — тесты, требующие реальной инфры, там сломаются, если их добавить без `testcontainers-go` (см. "Тестирование"). Линтера на Go-код кроме `go vet`/`gofmt` нет — на `.proto` есть `easyp lint` (см. "grpc-граница" ниже).
 
 ## Архитектурные правила
 
@@ -50,7 +50,19 @@
 
 ### Ошибки → HTTP
 
-Сентинелы в `platform/apperrors` (`ErrNotFound`, `ErrInvalidArgument`, `ErrConflict`) + `apperrors.ValidationErrors`. `platform/transport/http/response.HTTPResponseHandler.ErrorResponse` — единственное место, матчащее сентинелы на HTTP-статус и `code`. Сырой `err.Error()` никогда не уходит клиенту, только в лог. Актуально только для `cmd/urlshortener` — у `cmd/analytics` HTTP-транспорта нет вовсе.
+Сентинелы в `platform/apperrors` (`ErrNotFound`, `ErrInvalidArgument`, `ErrConflict`, `ErrAuthorization`, `ErrUnauthenticated`) + `apperrors.ValidationErrors`. `platform/transport/http/response.HTTPResponseHandler.ErrorResponse` — единственное место, матчащее сентинелы на HTTP-статус и `code`. Сырой `err.Error()` никогда не уходит клиенту, только в лог. Актуально для `cmd/urlshortener`; у `cmd/analytics` HTTP-транспорта нет вовсе, только grpc.
+
+`links.user_id REFERENCES users.id ON DELETE SET NULL` — удаление юзера автоматически анонимизирует его ссылки, `urls`-фиче ничего чинить не надо. Но `INSERT` со старым `user_id` от уже протухшей сессии (юзера снесли/накатили старый дамп, а Redis-сессия ещё жива) даёт `pool.ErrViolatesForeignKey`, замаплен в `create_short_link.go` на `apperrors.ErrUnauthenticated` (401), не `ErrConflict` — с точки зрения клиента это не конфликт данных, а невалидная идентификация. Кука на этом пути сама не чистится (автоочистка в `middleware.CurrentUser` срабатывает только когда **сессии** нет в Redis, а тут сессия жива) — не баг, TTL сам разрулит; активно чистить не стали — событие только от ручного вмешательства в БД (дамп/restore), самим приложением недостижимо.
+
+### grpc-граница между `urlshortener` и `analytics`
+
+`platform/transport/grpc/{server,client,interceptor}` — общий слой. `api/proto` → `api/gen` (`easyp`, `make proto`), сгенерённый код **закоммичен**, не в `.gitignore` — иначе `git diff`/`git status` не видят untracked-путь и `make proto-check` (сравнивает свежую генерацию с закоммиченной) молча всегда зелёный, не ловит рассинхрон `.proto` ↔ `api/gen`.
+
+`easyp.yaml`: правило `PACKAGE_DIRECTORY_MATCH` сознательно выключено. В самом `easyp` (проверено v0.16.6 и v0.16.7-rc1) `Root` для этого правила захардкожен в `"."` (`internal/rules/builder.go`, `// TODO: fix me` в исходниках библиотеки), не настраивается ни через `easyp.yaml`, ни через env — правило гарантированно падает на любом `.proto` не в корне репозитория. Не переименовывать `package` под этот баг (сломает wire-имя grpc-сервиса, `/analytics.v1.AnalyticsService/...` в `_FullMethodName`) — просто держать правило выключенным.
+
+Порядок grpc-интерцепторов в `cmd/analytics/main.go` важен: `Validation → Logger → Error → Logging → Panic`. `interceptor.Logger` кладёт логгер в `ctx`; всё, что читает его через `logger.FromContext(ctx)` (`Error`, `Logging`), обязано идти **после** него в списке — `ctx` в цепочке интерцепторов течёт от внешнего к внутреннему и не течёт обратно, более ранний интерцептор никогда не увидит того, что положил в `ctx` более поздний. `interceptor.Logging()` — общий адаптер под `logging.UnaryClientInterceptor`/`UnaryServerInterceptor` (`go-grpc-middleware`), тоже читает логгер из `ctx`, не из захваченного при конструировании — иначе `request_id` не попадает в grpc-логи клиента.
+
+`grpcclient.NewGRPCClient` зовёт `conn.Connect()` сразу при создании, не блокируясь. `grpc.NewClient` сам по себе ленивый — коннект не начнётся до первого RPC, а на Windows резолв `localhost` иногда съедает весь ретрай-бюджет (`GRPC_CLIENT_MAX_RETRIES`×`GRPC_CLIENT_PER_TIMEOUT`) прямо на первом запросе. Не заменять на блокирующее ожидание `READY` при старте процесса — `urlshortener` должен подниматься, даже если `analytics` ещё не готов, и самовосстанавливаться через штатный реконнект `grpc.ClientConn`, когда `analytics` появится.
 
 ### Контекст
 
@@ -118,6 +130,10 @@ make run-analytics          # go mod tidy && go run cmd/analytics/main.go
 make env-up / env-down      # docker-compose (postgres, redis, kafka)
 make migrate-up / migrate-down
 make kafka-topic-init       # docker-compose exec kafka ... (НЕ run — advertised.listeners настроен под доступ с хоста)
+make tools                  # установить easyp + protoc-gen-go/-go-grpc/-validate, зафиксированных версий
+make proto                  # easyp mod download && easyp generate — api/proto -> api/gen
+make proto-lint             # easyp lint
+make proto-check            # make proto + git status --porcelain api/gen (ловит и modified, и новые untracked-файлы)
 go build ./... && go vet ./...
 gofmt -l .                   # покажет почти все файлы как "неформатированные" — это CRLF на Windows, не запускай gofmt -w . по всему репо
 ```

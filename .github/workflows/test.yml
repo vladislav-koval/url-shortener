@@ -7,8 +7,34 @@ on:
     branches: [ main, master ]
 
 jobs:
+  proto-check:
+    name: Check generated proto code
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.1'
+          cache: true
+
+      - name: Set up env file
+        run: cp .env.example .env
+
+      - name: Install proto tools
+        run: make tools
+
+      - name: Lint proto files
+        run: make proto-lint
+
+      - name: Check generated proto code is up to date
+        run: make proto-check
+
   run-tests:
     name: Run tests
+    needs: proto-check
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
