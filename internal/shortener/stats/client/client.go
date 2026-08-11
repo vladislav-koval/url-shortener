@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc"
 )
 
+//go:generate mockgen -destination=mocks/mock_analytics_client.go -package=mocks github.com/vladislav-koval/url-shortener/api/gen/analytics/v1 AnalyticsServiceClient
 type Client struct {
 	client analyticsv1.AnalyticsServiceClient
 }

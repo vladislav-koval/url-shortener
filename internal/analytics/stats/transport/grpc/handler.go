@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc"
 )
 
+//go:generate mockgen -source=./handler.go -destination=mocks/mock_service.go -package=mocks
 type Handler struct {
 	analyticsv1.UnimplementedAnalyticsServiceServer
 	service Service

@@ -6,6 +6,7 @@ import (
 	"github.com/vladislav-koval/url-shortener/internal/analytics/stats/domain"
 )
 
+//go:generate mockgen -source=./service.go -destination=mocks/mock_service.go -package=mocks
 type Service struct {
 	repository Repository
 }
