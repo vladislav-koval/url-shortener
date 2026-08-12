@@ -89,6 +89,14 @@ make run              # go mod tidy && go run ./cmd/urlshortener
 
 Сервер поднимется на `HTTP_ADDR` из `.env` (по умолчанию `:5050`).
 
+**GeoIP-база.** Резолвинг страны/города по IP клика использует локальную базу MaxMind GeoLite2 City в формате `.mmdb`. Файл не лежит в репозитории
+
+1. Завести бесплатный аккаунт на [maxmind.com](https://www.maxmind.com/en/geolite2/signup) и сгенерировать license key.
+2. Скачать `GeoLite2-City.mmdb` (вручную через личный кабинет или через `geoipupdate`).
+3. Положить файл по пути из `GEO_FILE_PATH` в `.env` (по умолчанию `data/geo-city.mmdb`, директория `data/` в `.gitignore`).
+
+Без этого файла `urlshortener` не стартует — `geo.NewClient` фейлится при инициализации.
+
 ## Тестирование
 
 ```bash

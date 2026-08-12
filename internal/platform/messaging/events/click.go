@@ -5,21 +5,24 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/vladislav-koval/url-shortener/internal/platform/geo"
 )
 
 type ClickEvent struct {
-	ID        uuid.UUID `json:"id"`
-	ShortCode string    `json:"short_code"`
-	IP        *string   `json:"ip"`
-	ClickedAt time.Time `json:"clicked_at"`
+	ID          uuid.UUID `json:"id"`
+	ShortCode   string    `json:"short_code"`
+	ClickedAt   time.Time `json:"clicked_at"`
+	CountryCode string    `json:"country"`
+	City        string    `json:"city"`
 }
 
-func NewClickEvent(shortCode string, ip *string) ClickEvent {
+func NewClickEvent(shortCode string, location geo.Geo) ClickEvent {
 	return ClickEvent{
-		ID:        uuid.New(),
-		ShortCode: shortCode,
-		IP:        ip,
-		ClickedAt: time.Now(),
+		ID:          uuid.New(),
+		ShortCode:   shortCode,
+		ClickedAt:   time.Now(),
+		CountryCode: location.Country,
+		City:        location.City,
 	}
 }
 

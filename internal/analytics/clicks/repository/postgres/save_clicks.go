@@ -13,7 +13,7 @@ func (r *Repository) SaveClicks(ctx context.Context, events []events.ClickEvent)
 	defer cancel()
 
 	numFields := 4
-	query := "INSERT INTO analytics.clicks (id, short_code, ip_address, clicked_at) VALUES "
+	query := "INSERT INTO analytics.clicks (id, short_code, country, city, clicked_at) VALUES "
 
 	args := make([]any, 0, len(events)*numFields)
 	for i, event := range events {
@@ -23,7 +23,7 @@ func (r *Repository) SaveClicks(ctx context.Context, events []events.ClickEvent)
 		idx := i * numFields
 		query += fmt.Sprintf("($%d, $%d, $%d, $%d)", idx+1, idx+2, idx+3, idx+4)
 
-		args = append(args, event.ID, event.ShortCode, event.IP, event.ClickedAt)
+		args = append(args, event.ID, event.ShortCode, event.CountryCode, event.City, event.ClickedAt)
 	}
 
 	query += " ON CONFLICT (id) DO NOTHING;"

@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/vladislav-koval/url-shortener/internal/platform/apperrors"
+	"github.com/vladislav-koval/url-shortener/internal/platform/geo"
 	"github.com/vladislav-koval/url-shortener/internal/platform/messaging/events"
 	"github.com/vladislav-koval/url-shortener/internal/shortener/urls/domain"
 	"github.com/vladislav-koval/url-shortener/internal/shortener/urls/service/mocks"
@@ -148,7 +149,8 @@ func TestResolveShortLink(t *testing.T) {
 	const (
 		inputShortCode   = "shortCode"
 		inputOriginalURL = "http://google.com"
-		ip               = "127.0.0.1"
+		inputCountry     = "US"
+		inputCity        = "New York"
 	)
 
 	t.Run("successful resolution and click recording", func(t *testing.T) {
@@ -162,7 +164,7 @@ func TestResolveShortLink(t *testing.T) {
 			}, nil).
 			Times(1)
 
-		event := events.NewClickEvent(inputShortCode, new(ip))
+		event := events.NewClickEvent(inputShortCode, geo.Geo{Country: inputCountry, City: inputCity})
 
 		recorder.EXPECT().
 			RecordClick(event).
@@ -186,7 +188,7 @@ func TestResolveShortLink(t *testing.T) {
 			RecordClick(gomock.Any()).
 			Times(0)
 
-		event := events.NewClickEvent(inputShortCode, new(ip))
+		event := events.NewClickEvent(inputShortCode, geo.Geo{Country: inputCountry, City: inputCity})
 		originalLink, err := svc.ResolveShortLink(context.Background(), inputShortCode, event)
 
 		assert.ErrorIs(t, err, apperrors.ErrNotFound)
