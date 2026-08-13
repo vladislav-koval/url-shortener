@@ -3,10 +3,12 @@ package shortenerhttp
 import (
 	"net/http"
 
+	"github.com/vladislav-koval/url-shortener/internal/platform/geo"
 	"github.com/vladislav-koval/url-shortener/internal/platform/logger"
 	"github.com/vladislav-koval/url-shortener/internal/platform/messaging/events"
 	"github.com/vladislav-koval/url-shortener/internal/platform/transport/http/request"
 	"github.com/vladislav-koval/url-shortener/internal/platform/transport/http/response"
+	"go.uber.org/zap"
 )
 
 func (h *Handler) Redirect(w http.ResponseWriter, r *http.Request) {
@@ -20,7 +22,16 @@ func (h *Handler) Redirect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	event := events.NewClickEvent(shortCode, request.GetClientIP(r))
+	ip := request.GetClientIP(r)
+	location := geo.Geo{}
+	if ip != nil {
+		location, err = h.geoResolver.Resolve(*ip)
+		if err != nil {
+			log.Error("failed to resolve geo", zap.Error(err))
+		}
+	}
+
+	event := events.NewClickEvent(shortCode, location)
 
 	originalURL, err := h.shortenerService.ResolveShortLink(r.Context(), shortCode, event)
 

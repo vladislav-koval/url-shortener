@@ -1,6 +1,7 @@
 package urls
 
 import (
+	"github.com/vladislav-koval/url-shortener/internal/platform/geo"
 	"github.com/vladislav-koval/url-shortener/internal/platform/logger"
 	"github.com/vladislav-koval/url-shortener/internal/platform/messaging/gokafka"
 	"github.com/vladislav-koval/url-shortener/internal/platform/repository/postgres/pool"
@@ -16,7 +17,7 @@ type Module struct {
 	Handler *shortenerhttp.Handler
 }
 
-func NewModule(pool pool.Pool, cache cache.Pool, clickWriter gokafka.Writer, log *logger.Logger) *Module {
+func NewModule(pool pool.Pool, cache cache.Pool, clickWriter gokafka.Writer, log *logger.Logger, geoResolver geo.Resolver) *Module {
 	shortenerRepository := cached.NewRepository(
 		cache,
 		cached.NewConfigMust(),
@@ -26,7 +27,7 @@ func NewModule(pool pool.Pool, cache cache.Pool, clickWriter gokafka.Writer, log
 	clickRecorder := producer.NewProducer(clickWriter, log)
 
 	shortenerService := service.NewService(shortenerRepository, clickRecorder)
-	shortenerHTTPHandler := shortenerhttp.NewHTTPHandler(shortenerService)
+	shortenerHTTPHandler := shortenerhttp.NewHTTPHandler(shortenerService, geoResolver)
 
 	return &Module{
 		Handler: shortenerHTTPHandler,

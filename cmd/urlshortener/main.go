@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/vladislav-koval/url-shortener/internal/platform/authorization"
+	"github.com/vladislav-koval/url-shortener/internal/platform/geo"
 	"github.com/vladislav-koval/url-shortener/internal/platform/logger"
 	"github.com/vladislav-koval/url-shortener/internal/platform/messaging/gokafka/segmentio"
 	"github.com/vladislav-koval/url-shortener/internal/platform/repository/postgres/pool/pgx"
@@ -52,6 +53,12 @@ func main() {
 		log.Fatal("failed to init grpc client", zap.Error(err))
 	}
 
+	log.Debug("initializing GEO client")
+	geoResolver, err := geo.NewResolver(geo.NewConfigMust(), log)
+	if err != nil {
+		log.Fatal("failed to init GEO client", zap.Error(err))
+	}
+
 	log.Debug("initializing kafka click writer")
 	recorderConfig := producer.NewConfigMust()
 	clickWriter := segmentio.NewWriter(
@@ -67,7 +74,7 @@ func main() {
 	)
 
 	log.Debug("initializing feature", zap.String("feature", "url shortener"))
-	shortenerModule := urls.NewModule(pgxPool, redisClient, clickWriter, log)
+	shortenerModule := urls.NewModule(pgxPool, redisClient, clickWriter, log, geoResolver)
 
 	authorizationCfg := authorization.NewConfigMust()
 
@@ -120,6 +127,11 @@ func main() {
 		},
 		func(context.Context) {
 			pgxPool.Close()
+		},
+		func(context.Context) {
+			if err := geoResolver.Close(); err != nil {
+				log.Error("failed to close geo client", zap.Error(err))
+			}
 		},
 	)
 }
