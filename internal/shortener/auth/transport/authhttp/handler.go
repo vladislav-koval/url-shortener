@@ -29,7 +29,7 @@ func NewHTTPHandler(authService Service, cfg Config, cookieSecure bool) *Handler
 	}
 }
 
-func (h *Handler) Routes() []server.Route {
+func (h *Handler) APIRoutes() []server.Route {
 	return []server.Route{
 		{
 			Method:  "GET",

@@ -43,7 +43,7 @@ flowchart LR
         Postgres[("PostgreSQL<br/>ссылки и аналитика")]
     end
 
-    Client -->|"POST /link<br/>GET /{code}"| Shortener
+    Client -->|"POST /api/v1/link<br/>GET /{code}"| Shortener
 
     Shortener <-->|"кеширование ссылок"| Redis
     Shortener -->|"сохранение и чтение ссылок"| Postgres
@@ -72,8 +72,8 @@ flowchart LR
 
 | Метод | Путь | Описание |
 |---|---|---|
-| `POST` | `/link` | Создать короткую ссылку. Тело: `{"url": "https://example.com"}` → `201` `{"short_code": "...", "original_url": "..."}` |
-| `GET` | `/{code}` | Редирект на оригинальный URL (`302`), либо `404 not_found` |
+| `POST` | `/api/v1/link` | Создать короткую ссылку. Тело: `{"url": "https://example.com"}` → `201` `{"short_code": "...", "original_url": "..."}` |
+| `GET` | `/{code}` | Редирект на оригинальный URL (`302`), либо `404 not_found`. Без версии — короткая ссылка не должна тащить на себе `/api/v1` |
 
 Ошибки — единый JSON-контракт (`{"code": "...", "message": "...", "details": [...]}`), собственный текст ошибки клиенту никогда не уходит, только в лог.
 

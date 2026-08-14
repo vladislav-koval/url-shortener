@@ -25,7 +25,7 @@ func NewHTTPHandler(s Service) *Handler {
 	}
 }
 
-func (h *Handler) Routes(resolver authorization.Resolver, cookieSecure bool) []server.Route {
+func (h *Handler) APIRoutes(resolver authorization.Resolver, cookieSecure bool) []server.Route {
 	return []server.Route{
 		{
 			Method:     "GET",
