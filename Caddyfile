@@ -1,0 +1,3 @@
+:80 {
+	reverse_proxy shortener:5050
+}
