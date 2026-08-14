@@ -96,9 +96,14 @@ func main() {
 		middleware.Panic(),
 	)
 
-	httpServer.RegisterRoutes(shortenerModule.Handler.Routes(authModule.SessionResolver, authorizationCfg.CookieSecure)...)
-	httpServer.RegisterRoutes(authModule.Handler.Routes()...)
-	httpServer.RegisterRoutes(statsModule.Handler.Routes(authModule.SessionResolver, authorizationCfg.CookieSecure)...)
+	apiV1 := server.NewApiVersionRouter(server.ApiVersion1)
+
+	apiV1.RegisterRoutes(shortenerModule.Handler.APIRoutes(authModule.SessionResolver, authorizationCfg.CookieSecure)...)
+	apiV1.RegisterRoutes(authModule.Handler.APIRoutes()...)
+	apiV1.RegisterRoutes(statsModule.Handler.APIRoutes(authModule.SessionResolver, authorizationCfg.CookieSecure)...)
+	httpServer.RegisterApiRoutes(apiV1)
+
+	httpServer.RegisterRoutes(shortenerModule.Handler.RedirectRoute()...)
 
 	shutdown.Run(
 		ctx,

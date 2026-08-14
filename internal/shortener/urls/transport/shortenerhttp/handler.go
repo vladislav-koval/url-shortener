@@ -29,18 +29,23 @@ func NewHTTPHandler(shortenerService Service, geoResolver geo.Resolver) *Handler
 	}
 }
 
-func (h *Handler) Routes(resolver authorization.Resolver, cookieSecure bool) []server.Route {
+func (h *Handler) RedirectRoute() []server.Route {
+	return []server.Route{
+		{
+			Method:  "GET",
+			Path:    "/{code}",
+			Handler: h.Redirect,
+		},
+	}
+}
+
+func (h *Handler) APIRoutes(resolver authorization.Resolver, cookieSecure bool) []server.Route {
 	return []server.Route{
 		{
 			Method:     "POST",
 			Path:       "/link",
 			Handler:    h.CreateShortLink,
 			Middleware: []middleware.Middleware{middleware.CurrentUser(resolver, cookieSecure)},
-		},
-		{
-			Method:  "GET",
-			Path:    "/{code}",
-			Handler: h.Redirect,
 		},
 	}
 }

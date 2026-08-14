@@ -1,4 +1,87 @@
 services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - shortener
+    restart: always
+
+  analytics:
+    build:
+      context: .
+      dockerfile: ./cmd/analytics/Dockerfile
+    container_name: analytics
+    environment:
+      - GRPC_ADDR=${GRPC_ADDR}
+      - POSTGRES_HOST=postgres
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_TIMEOUT=${POSTGRES_TIMEOUT}
+      - KAFKA_BROKERS=redpanda:9092
+      - KAFKA_TOPIC=${KAFKA_TOPIC}
+      - KAFKA_CONSUMER_BATCH_SIZE=${KAFKA_CONSUMER_BATCH_SIZE}
+      - KAFKA_CONSUMER_BATCH_TIMEOUT=${KAFKA_CONSUMER_BATCH_TIMEOUT}
+      - KAFKA_CONSUMER_GOROUTINES_COUNT=${KAFKA_CONSUMER_GOROUTINES_COUNT}
+      - LOGGER_LEVEL=${LOGGER_LEVEL}
+      - LOGGER_FOLDER=/app/out/logs
+      - SHUTDOWN_TIMEOUT=${SHUTDOWN_TIMEOUT}
+    volumes:
+      - ./out/logs/analytics:/app/out/logs
+    restart: always
+
+  shortener:
+    build:
+      context: .
+      dockerfile: ./cmd/urlshortener/Dockerfile
+    container_name: shortener
+    environment:
+      - GRPC_ADDR=${GRPC_ADDR}
+      - POSTGRES_HOST=postgres
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_TIMEOUT=${POSTGRES_TIMEOUT}
+      - REDIS_HOST=redis
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_DB=${REDIS_DB}
+      - SHORTENER_CACHE_TTL=${SHORTENER_CACHE_TTL}
+      - GRPC_CLIENT_ADDR=analytics${GRPC_ADDR}
+      - GRPC_CLIENT_MAX_RETRIES=${GRPC_CLIENT_MAX_RETRIES}
+      - GRPC_CLIENT_PER_TIMEOUT=${GRPC_CLIENT_PER_TIMEOUT}
+      - GEO_FILE_PATH=${GEO_FILE_PATH}
+      - GEO_REQUIRED=${GEO_REQUIRED}
+      - KAFKA_BROKERS=redpanda:9092
+      - KAFKA_TOPIC=${KAFKA_TOPIC}
+      - KAFKA_PRODUCER_BATCH_SIZE=${KAFKA_PRODUCER_BATCH_SIZE}
+      - KAFKA_PRODUCER_QUEUE_SIZE=${KAFKA_PRODUCER_QUEUE_SIZE}
+      - KAFKA_PRODUCER_FLUSH_INTERVAL=${KAFKA_PRODUCER_FLUSH_INTERVAL}
+      - KAFKA_PRODUCER_WRITE_TIMEOUT=${KAFKA_PRODUCER_WRITE_TIMEOUT}
+      - AUTHORIZATION_COOKIE_SECURE=${AUTHORIZATION_COOKIE_SECURE}
+      - AUTH_SUCCESS_REDIRECT_URL=${AUTH_SUCCESS_REDIRECT_URL}
+      - AUTH_SESSION_TTL=${AUTH_SESSION_TTL}
+      - GOOGLE_AUTH_CLIENT_ID=${GOOGLE_AUTH_CLIENT_ID}
+      - GOOGLE_AUTH_CLIENT_SECRET=${GOOGLE_AUTH_CLIENT_SECRET}
+      - GOOGLE_AUTH_CALLBACK_URL=${GOOGLE_AUTH_CALLBACK_URL}
+      - HTTP_ADDR=${HTTP_ADDR}
+      - HTTP_ALLOWED_ORIGINS=${HTTP_ALLOWED_ORIGINS}
+      - LOGGER_LEVEL=${LOGGER_LEVEL}
+      - LOGGER_FOLDER=/app/out/logs
+      - SHUTDOWN_TIMEOUT=${SHUTDOWN_TIMEOUT}
+    volumes:
+      - ./out/logs/shortener:/app/out/logs
+    restart: always
+
   postgres-migrate:
     profiles:
       - tools
@@ -36,12 +119,12 @@ services:
       - start
       - --mode dev-container
       - --smp 1
-      - --kafka-addr 0.0.0.0:9092
-      - --advertise-kafka-addr ${KAFKA_ADVERTISED_HOST}:9092
+      - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr internal://redpanda:9092,external://${KAFKA_ADVERTISED_HOST}:19092
       - --rpc-addr 0.0.0.0:33145
       - --advertise-rpc-addr redpanda:33145
     ports:
-      - "127.0.0.1:9092:9092"
+      - "127.0.0.1:19092:19092"
     volumes:
       - kafkadata:/var/lib/redpanda/data
     restart: always
@@ -61,3 +144,5 @@ services:
 volumes:
   pgdata:
   kafkadata:
+  caddy_data:
+  caddy_config:
