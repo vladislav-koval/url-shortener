@@ -5,12 +5,14 @@ services:
     ports:
       - "80:80"
       - "443:443"
+      - "3000:3000"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
       - shortener
+      - frontend
     restart: always
 
   analytics:
@@ -80,6 +82,17 @@ services:
       - SHUTDOWN_TIMEOUT=${SHUTDOWN_TIMEOUT}
     volumes:
       - ./out/logs/shortener:/app/out/logs
+    restart: always
+
+  frontend:
+    build:
+      context: ../url-shortener-front
+      args:
+        - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
+        - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
+    container_name: frontend
+    depends_on:
+      - shortener
     restart: always
 
   postgres-migrate:

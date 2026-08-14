@@ -1,8 +1,10 @@
 package shortenerhttp
 
 import (
+	"errors"
 	"net/http"
 
+	"github.com/vladislav-koval/url-shortener/internal/platform/apperrors"
 	"github.com/vladislav-koval/url-shortener/internal/platform/geo"
 	"github.com/vladislav-koval/url-shortener/internal/platform/logger"
 	"github.com/vladislav-koval/url-shortener/internal/platform/messaging/events"
@@ -10,6 +12,11 @@ import (
 	"github.com/vladislav-koval/url-shortener/internal/platform/transport/http/response"
 	"go.uber.org/zap"
 )
+
+// notFoundRedirect is a relative path — frontend and backend now share one
+// domain (see Caddyfile), and the frontend's own locale middleware prefixes
+// it with /ru or /en, same as it already does for every other bare path.
+const notFoundRedirect = "/not-found"
 
 func (h *Handler) Redirect(w http.ResponseWriter, r *http.Request) {
 	log := logger.FromContext(r.Context())
@@ -36,6 +43,11 @@ func (h *Handler) Redirect(w http.ResponseWriter, r *http.Request) {
 	originalURL, err := h.shortenerService.ResolveShortLink(r.Context(), shortCode, event)
 
 	if err != nil {
+		if errors.Is(err, apperrors.ErrNotFound) {
+			responseHandler.RedirectResponse(r, notFoundRedirect)
+			return
+		}
+
 		responseHandler.ErrorResponse(err, "failed to get url")
 		return
 	}
