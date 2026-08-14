@@ -12,7 +12,7 @@ func (r *Repository) SaveClicks(ctx context.Context, events []events.ClickEvent)
 	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
 	defer cancel()
 
-	numFields := 4
+	numFields := 5
 	query := "INSERT INTO analytics.clicks (id, short_code, country, city, clicked_at) VALUES "
 
 	args := make([]any, 0, len(events)*numFields)
@@ -21,7 +21,7 @@ func (r *Repository) SaveClicks(ctx context.Context, events []events.ClickEvent)
 			query += ","
 		}
 		idx := i * numFields
-		query += fmt.Sprintf("($%d, $%d, $%d, $%d)", idx+1, idx+2, idx+3, idx+4)
+		query += fmt.Sprintf("($%d, $%d, $%d, $%d, $%d)", idx+1, idx+2, idx+3, idx+4, idx+5)
 
 		args = append(args, event.ID, event.ShortCode, event.CountryCode, event.City, event.ClickedAt)
 	}

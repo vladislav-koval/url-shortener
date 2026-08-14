@@ -22,7 +22,7 @@ env-up:
 env-cleanup: ## env: Очистить окружение проекта
 	@read -p "Remove all volumes?. [y/N]: " ans; \
 	if [ "$$ans" = "y" ]; then \
-		docker compose down postgres port-forwarder kafka --volumes && \
+		docker compose down postgres port-forwarder redpanda --volumes && \
 		docker volume rm url-shortener_pgdata && \
 		docker volume rm url-shortener_kafkadata && \
 		echo "Cleanup environment files"; \
@@ -52,12 +52,10 @@ env-port-close:
 	@docker-compose down port-forwarder
 
 kafka-topic-init:
-	docker-compose exec kafka /opt/kafka/bin/kafka-topics.sh \
-		--bootstrap-server localhost:9092 \
-		--create --if-not-exists \
-		--topic ${KAFKA_TOPIC} \
+	docker-compose exec redpanda rpk topic create ${KAFKA_TOPIC} \
+		--if-not-exists \
 		--partitions 3 \
-		--replication-factor 1
+		--replicas 1
 
 migrate-up:
 	@make migrate-action action=up

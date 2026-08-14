@@ -5,7 +5,7 @@
 ![Go](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go&logoColor=white)
 ![Postgres](https://img.shields.io/badge/PostgreSQL-18-4169E1?logo=postgresql&logoColor=white)
 ![Redis](https://img.shields.io/badge/Redis-8-DC382D?logo=redis&logoColor=white)
-![Kafka](https://img.shields.io/badge/Kafka-4.3-231F20?logo=apachekafka&logoColor=white)
+![Redpanda](https://img.shields.io/badge/Redpanda-Kafka--compatible-E32636)
 [![Tests](https://github.com/vladislav-koval/url-shortener/actions/workflows/test.yml/badge.svg)](https://github.com/vladislav-koval/url-shortener/actions/workflows/test.yml)
 
 ## Что это
@@ -20,7 +20,7 @@
 
 **Каждая технология подключена через интерфейс, а не напрямую.** Бизнес-логика не знает про `pgx`, `go-redis` или `kafka-go` — только про свои интерфейсы (`pool.Pool`, `cache.Pool`, `gokafka.Writer`). Конкретные реализации собираются в одном месте, `cmd/urlshortener/main.go`, так что замена технологии не требует правок в фичах.
 
-**Запись клика не завязана на контекст HTTP-запроса.** `RecordClick` вызывается из хендлера редиректа, но использует `context.Background()`, а не контекст входящего запроса. `Redirect` — момент, где клиент может оборвать соединение (закрыл вкладку, мобильная сеть), и если бы запись в Kafka зависела от его контекста, клик терялся бы из-за поведения браузера, а не проблем с Kafka. Kafka-writer работает в `Async: true` с неограниченной внутренней очередью — компромисс в пользу "не терять клики" вместо ограничения памяти, уместный при текущей нагрузке.
+**Запись клика не завязана на контекст HTTP-запроса.** `RecordClick` вызывается из хендлера редиректа, но использует `context.Background()`, а не контекст входящего запроса. `Redirect` — момент, где клиент может оборвать соединение (закрыл вкладку, мобильная сеть), и если бы запись в Kafka зависела от его контекста, клик терялся бы из-за поведения браузера, а не проблем с Kafka. Kafka-writer сам батчит сообщения поверх **ограниченной** очереди (`QueueSize`) — без `Async: true` и без неограниченной очереди `kafka-go`. Компромисс в другую сторону: лучше потерять клик при переполнении очереди, чем уронить процесс OOM'ом на маленьком сервере; потери не тихие — считаются и периодически логируются (`Writer.Dropped()`).
 
 **Маппинг ошибок библиотек тестируется в два слоя.** Каждый адаптер (`pgx`, `go-redis`) транслирует ошибки библиотек в свои сентинелы (`pool.ErrNotFound`, `cache.ErrNotFound`...). Тест на голую функцию маппинга не ловит случай "забыли вызвать маппер внутри метода-обёртки" — код компилируется, ошибка просто перестаёт совпадать выше по стеку. Поэтому тесты идут парой: маппер отдельно и обёртка, которая доказывает, что маппер реально вызывается.
 
@@ -39,7 +39,7 @@ flowchart LR
 
     subgraph Infrastructure["Infrastructure"]
         Redis[("Redis<br/>кеш ссылок")]
-        Kafka[/"Kafka topic<br/>click-events"/]
+        Kafka[/"Kafka topic<br/>click-events (Redpanda)"/]
         Postgres[("PostgreSQL<br/>ссылки и аналитика")]
     end
 
@@ -61,12 +61,12 @@ flowchart LR
 | HTTP | `net/http` + свой роутер/middleware (CORS, RequestID, структурные логи, паника-рекавери) |
 | БД | PostgreSQL 18, `jackc/pgx/v5`, миграции — `golang-migrate` |
 | Кеш | Redis 8, `redis/go-redis/v9` |
-| Очередь | Kafka 4.3 (KRaft, без ZooKeeper), `segmentio/kafka-go` |
+| Очередь | Redpanda (single-node, Kafka wire-протокол), `segmentio/kafka-go` |
 | Логирование | `go.uber.org/zap`, структурные JSON-логи с `request_id` |
 | Конфигурация | `kelseyhightower/envconfig`, свой `Config` на каждый пакет |
 | Валидация | `go-playground/validator/v10` |
 | Тесты | `stretchr/testify`, `go.uber.org/mock` (`mockgen`) |
-| Инфраструктура | Docker Compose (Postgres, Redis, Kafka одним поднятием) |
+| Инфраструктура | Docker Compose (Postgres, Redis, Redpanda одним поднятием) |
 
 ## API
 
@@ -81,7 +81,7 @@ flowchart LR
 
 ```bash
 cp .env.example .env
-make env-up          # поднимает Postgres, Redis, Kafka в docker-compose
+make env-up          # поднимает Postgres, Redis, Redpanda в docker-compose
 make migrate-up       # применяет миграции
 make kafka-topic-init # создаёт Kafka-топик (idempotent)
 make run              # go mod tidy && go run ./cmd/urlshortener
