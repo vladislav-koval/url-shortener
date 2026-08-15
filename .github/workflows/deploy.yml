@@ -1,0 +1,53 @@
+name: Deploy
+
+# Ручной запуск — кнопка "Run workflow". Сборка образов уже произошла сама
+# (см. test.yml: build-and-push на каждый пуш в main после успешных тестов) —
+# этот workflow только идёт на сервер и переключает контейнеры на уже готовые
+# образы :latest из GHCR.
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to server
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      # Весь .env лежит одним секретом ENV_FILE (Settings -> Secrets and
+      # variables -> Actions) — аналог CI/CD Variables в GitLab, просто у
+      # GitHub это называется Secrets. Пишется в файл только внутри рантайма
+      # раннера и сразу же уезжает на сервер — в репозитории/логах не оседает.
+      - name: Write .env from secret
+        run: printf '%s' "${{ secrets.ENV_FILE }}" > .env
+
+      # Makefile и migrations/ синкаются тоже — чтобы миграции и создание
+      # топика на сервере гонялись через `make`, теми же командами, что и
+      # локально, а не переписанными второй раз прямо в этом workflow.
+      - name: Sync compose files and env to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          source: "docker-compose.yml,Caddyfile,.env,Makefile,migrations"
+          target: ${{ secrets.DEPLOY_PATH }}
+
+      # `up -d` без списка сервисов — специально: на чистом сервере поднимает
+      # весь стек (Postgres/Redis/Redpanda/Caddy/frontend) сам, а на уже
+      # работающем сервере не трогает то, что не поменялось (сравнивает
+      # конфиг/образ каждого сервиса) — пересоздаст только shortener/analytics,
+      # у которых реально обновился образ.
+      - name: Pull, migrate and restart services
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd ${{ secrets.DEPLOY_PATH }}
+            docker compose pull shortener analytics
+            docker compose up -d
+            make migrate-up
+            make kafka-topic-init

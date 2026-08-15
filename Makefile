@@ -17,7 +17,7 @@ run-analytics:
 	go run cmd/analytics/main.go
 
 env-up:
-	@docker-compose up -d
+	@docker compose up -d
 
 env-cleanup: ## env: Очистить окружение проекта
 	@read -p "Remove all volumes?. [y/N]: " ans; \
@@ -31,7 +31,7 @@ env-cleanup: ## env: Очистить окружение проекта
 	fi
 
 env-down:
-	@docker-compose down
+	@docker compose down
 
 migrate-create:
 	@if [ -z "$(name)" ]; then \
@@ -39,20 +39,20 @@ migrate-create:
 		exit 1; \
 	fi; \
 
-	docker-compose run --rm postgres-migrate \
+	docker compose run --rm postgres-migrate \
 		create \
 		-ext sql \
 		-dir ./migrations \
 		-seq $(name)
 
 env-port-forward:
-	@docker-compose up -d port-forwarder
+	@docker compose up -d port-forwarder
 
 env-port-close:
-	@docker-compose down port-forwarder
+	@docker compose down port-forwarder
 
 kafka-topic-init:
-	docker-compose exec redpanda rpk topic create ${KAFKA_TOPIC} \
+	docker compose exec redpanda rpk topic create ${KAFKA_TOPIC} \
 		--if-not-exists \
 		--partitions 3 \
 		--replicas 1
@@ -69,7 +69,7 @@ migrate-action:
 		exit 1; \
 	fi; \
 
-	docker-compose run --rm postgres-migrate \
+	docker compose run --rm postgres-migrate \
 		-path ./migrations \
 		-database postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable \
 		$(action)

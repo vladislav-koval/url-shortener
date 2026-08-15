@@ -1,0 +1,51 @@
+name: Build and Push
+
+# Гоняется сам через workflow_run — только после того, как "Go Test" отработал
+# успешно на пуш в main (branches: [main] отсеивает прогоны от PR — те гоняются
+# на ветке PR, а не на main). Деплой (SSH на сервер) — отдельный файл, вручную.
+on:
+  workflow_run:
+    workflows: ["Go Test"]
+    types: [completed]
+    branches: [main]
+
+jobs:
+  build-and-push:
+    name: Build and push images
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push shortener image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./cmd/urlshortener/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/shortener:latest
+            ghcr.io/${{ github.repository }}/shortener:${{ github.event.workflow_run.head_sha }}
+
+      - name: Build and push analytics image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./cmd/analytics/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/analytics:latest
+            ghcr.io/${{ github.repository }}/analytics:${{ github.event.workflow_run.head_sha }}

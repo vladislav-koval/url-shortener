@@ -5,7 +5,6 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "3000:3000"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
@@ -19,6 +18,7 @@ services:
     build:
       context: .
       dockerfile: ./cmd/analytics/Dockerfile
+    image: ghcr.io/vladislav-koval/url-shortener/analytics:latest
     container_name: analytics
     environment:
       - GRPC_ADDR=${GRPC_ADDR}
@@ -44,6 +44,7 @@ services:
     build:
       context: .
       dockerfile: ./cmd/urlshortener/Dockerfile
+    image: ghcr.io/vladislav-koval/url-shortener/shortener:latest
     container_name: shortener
     environment:
       - GRPC_ADDR=${GRPC_ADDR}
@@ -82,6 +83,7 @@ services:
       - SHUTDOWN_TIMEOUT=${SHUTDOWN_TIMEOUT}
     volumes:
       - ./out/logs/shortener:/app/out/logs
+      - ./data:/app/data
     restart: always
 
   frontend:
@@ -90,6 +92,7 @@ services:
       args:
         - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
         - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
+    image: ghcr.io/vladislav-koval/url-shortener-front/frontend:latest
     container_name: frontend
     depends_on:
       - shortener
