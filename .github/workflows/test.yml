@@ -52,10 +52,10 @@ jobs:
       - name: Generate Coverage Report
         run: |
           echo "### Отчет по покрытию кода :test_tube:" >> $GITHUB_STEP_SUMMARY
-          
+
           # Исключаем файлы автосгенерированных моков, чтобы они не занижали статистику
           grep -v "/mocks" coverage.out > coverage.clean.out
-          
+
           TOTAL_COVERAGE=$(go tool cover -func=coverage.clean.out | grep total | awk '{print $3}')
-          
+
           echo "Test coverage: $TOTAL_COVERAGE" >> $GITHUB_STEP_SUMMARY

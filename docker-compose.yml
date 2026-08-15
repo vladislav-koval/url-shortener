@@ -11,12 +11,14 @@ services:
       - caddy_config:/config
     depends_on:
       - shortener
+      - frontend
     restart: always
 
   analytics:
     build:
       context: .
       dockerfile: ./cmd/analytics/Dockerfile
+    image: ghcr.io/vladislav-koval/url-shortener/analytics:latest
     container_name: analytics
     environment:
       - GRPC_ADDR=${GRPC_ADDR}
@@ -42,6 +44,7 @@ services:
     build:
       context: .
       dockerfile: ./cmd/urlshortener/Dockerfile
+    image: ghcr.io/vladislav-koval/url-shortener/shortener:latest
     container_name: shortener
     environment:
       - GRPC_ADDR=${GRPC_ADDR}
@@ -80,6 +83,19 @@ services:
       - SHUTDOWN_TIMEOUT=${SHUTDOWN_TIMEOUT}
     volumes:
       - ./out/logs/shortener:/app/out/logs
+      - ./data:/app/data
+    restart: always
+
+  frontend:
+    build:
+      context: ../url-shortener-front
+      args:
+        - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
+        - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
+    image: ghcr.io/vladislav-koval/url-shortener-front/frontend:latest
+    container_name: frontend
+    depends_on:
+      - shortener
     restart: always
 
   postgres-migrate:
