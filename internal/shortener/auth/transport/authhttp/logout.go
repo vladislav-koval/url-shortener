@@ -20,5 +20,5 @@ func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
 		h.authService.Logout(r.Context(), sessionCookie.Value)
 	}
 
-	responseHandler.RedirectResponse(r, logoutRedirect)
+	responseHandler.NoContentResponse()
 }

@@ -8,12 +8,12 @@ import (
 )
 
 type Config struct {
-	SuccessRedirectURL string
-	SessionTTL         time.Duration
+	FrontendURL string
+	SessionTTL  time.Duration
 }
 
-type httpOnlyConfig struct {
-	SuccessRedirectURL string `envconfig:"SUCCESS_REDIRECT_URL" required:"true"`
+type frontendConfig struct {
+	URL string `envconfig:"FRONTEND_URL" required:"true"`
 }
 
 type sessionTTLConfig struct {
@@ -21,9 +21,9 @@ type sessionTTLConfig struct {
 }
 
 func NewConfig() (Config, error) {
-	var httpCfg httpOnlyConfig
-	if err := envconfig.Process("AUTH", &httpCfg); err != nil {
-		return Config{}, fmt.Errorf("failed to process env auth http config: %w", err)
+	var frontendCfg frontendConfig
+	if err := envconfig.Process("", &frontendCfg); err != nil {
+		return Config{}, fmt.Errorf("failed to process env frontend config: %w", err)
 	}
 
 	var sessionCfg sessionTTLConfig
@@ -32,8 +32,8 @@ func NewConfig() (Config, error) {
 	}
 
 	return Config{
-		SuccessRedirectURL: httpCfg.SuccessRedirectURL,
-		SessionTTL:         sessionCfg.TTL,
+		FrontendURL: frontendCfg.URL,
+		SessionTTL:  sessionCfg.TTL,
 	}, nil
 }
 

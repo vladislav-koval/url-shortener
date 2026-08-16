@@ -8,10 +8,10 @@ import (
 )
 
 type Handler struct {
-	authService        Service
-	cookieSecure       bool
-	successRedirectURL string
-	cookieTTL          time.Duration
+	authService  Service
+	cookieSecure bool
+	frontendURL  string
+	cookieTTL    time.Duration
 }
 
 type Service interface {
@@ -22,10 +22,10 @@ type Service interface {
 
 func NewHTTPHandler(authService Service, cfg Config, cookieSecure bool) *Handler {
 	return &Handler{
-		authService:        authService,
-		cookieSecure:       cookieSecure,
-		successRedirectURL: cfg.SuccessRedirectURL,
-		cookieTTL:          cfg.SessionTTL,
+		authService:  authService,
+		cookieSecure: cookieSecure,
+		frontendURL:  cfg.FrontendURL,
+		cookieTTL:    cfg.SessionTTL,
 	}
 }
 
