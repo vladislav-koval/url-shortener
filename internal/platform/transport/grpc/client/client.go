@@ -33,6 +33,8 @@ func NewGRPCClient(cfg Config) (*GRPCClient, error) {
 			logging.UnaryClientInterceptor(interceptor.Logging(), logOpts...),
 			retry.UnaryClientInterceptor(retryOpts...),
 		),
+		grpc.WithIdleTimeout(0),
+		grpc.WithDisableServiceConfig(),
 	)
 
 	if err != nil {

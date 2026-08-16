@@ -9,8 +9,6 @@ import (
 const (
 	stateCookieName    = "google_oauth_state"
 	verifierCookieName = "google_oauth_verifier"
-
-	logoutRedirect = "/"
 )
 
 var googleCookiePath = fmt.Sprintf("/api/%s/auth/google", server.ApiVersion1)

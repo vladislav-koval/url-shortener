@@ -81,13 +81,15 @@ flowchart LR
 
 ```bash
 cp .env.example .env
-make env-up          # поднимает Postgres, Redis, Redpanda в docker-compose
+docker compose up -d postgres redis redpanda port-forwarder # инфра для локальной разработки
 make migrate-up       # применяет миграции
 make kafka-topic-init # создаёт Kafka-топик (idempotent)
 make run              # go mod tidy && go run ./cmd/urlshortener
 ```
 
 Сервер поднимется на `HTTP_ADDR` из `.env` (по умолчанию `:5050`).
+
+`docker-compose.yml` теперь содержит не только инфраструктуру, но и полный прод-стек (`caddy`, `shortener`, `analytics`, `frontend`) — эти сервисы без `profiles`, поэтому голый `make env-up` (`docker compose up -d`) поднимет и их тоже, включая сборку `frontend` из соседнего репозитория `../url-shortener-front`. Для локальной разработки бэкенда явно перечисляй нужные сервисы, как выше, а не полагайся на `make env-up`.
 
 **GeoIP-база.** Резолвинг страны/города по IP клика использует локальную базу MaxMind GeoLite2 City в формате `.mmdb`. Файл не лежит в репозитории
 

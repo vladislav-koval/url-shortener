@@ -53,6 +53,27 @@ func (h *HTTPResponseHandler) RedirectResponse(r *http.Request, url string) {
 }
 
 func (h *HTTPResponseHandler) ErrorResponse(err error, msg string) {
+	statusCode, code := h.logError(err, msg)
+
+	resp := ErrorResponse{Code: code, Message: msg}
+
+	var fieldErrs apperrors.ValidationErrors
+	if errors.As(err, &fieldErrs) {
+		resp.Details = make([]FieldError, 0, len(fieldErrs))
+		for _, fe := range fieldErrs {
+			resp.Details = append(resp.Details, FieldError{Field: fe.Field, Rule: fe.Rule, Param: fe.Param})
+		}
+	}
+
+	h.JSONResponse(resp, statusCode)
+}
+
+func (h *HTTPResponseHandler) ErrorRedirectResponse(r *http.Request, err error, msg string, url string) {
+	h.logError(err, msg)
+	h.RedirectResponse(r, url)
+}
+
+func (h *HTTPResponseHandler) logError(err error, msg string) (int, string) {
 	var (
 		statusCode int
 		code       string
@@ -81,17 +102,7 @@ func (h *HTTPResponseHandler) ErrorResponse(err error, msg string) {
 
 	logFunc(msg, zap.Error(err))
 
-	resp := ErrorResponse{Code: code, Message: msg}
-
-	var fieldErrs apperrors.ValidationErrors
-	if errors.As(err, &fieldErrs) {
-		resp.Details = make([]FieldError, 0, len(fieldErrs))
-		for _, fe := range fieldErrs {
-			resp.Details = append(resp.Details, FieldError{Field: fe.Field, Rule: fe.Rule, Param: fe.Param})
-		}
-	}
-
-	h.JSONResponse(resp, statusCode)
+	return statusCode, code
 }
 
 func (h *HTTPResponseHandler) PanicResponse(p any, msg string) {
