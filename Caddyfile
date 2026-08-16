@@ -1,4 +1,4 @@
-:80 {
+tiniq.cc, www.tiniq.cc {
 	@shortcode path_regexp ^/[0-9a-zA-Z]{7}$
 
 	handle @shortcode {
