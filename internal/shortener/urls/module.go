@@ -26,7 +26,7 @@ func NewModule(pool pool.Pool, cache cache.Pool, clickWriter gokafka.Writer, log
 
 	clickRecorder := producer.NewProducer(clickWriter, log)
 
-	shortenerService := service.NewService(shortenerRepository, clickRecorder)
+	shortenerService := service.NewService(shortenerRepository, clickRecorder, service.NewConfigMust())
 	shortenerHTTPHandler := shortenerhttp.NewHTTPHandler(shortenerService, geoResolver)
 
 	return &Module{

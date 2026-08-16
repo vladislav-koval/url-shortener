@@ -20,7 +20,7 @@ const (
 func (s *Service) CreateShortLink(ctx context.Context, originalURL string, userID *uuid.UUID) (domain.Link, error) {
 	uninitializedLink := domain.NewLink("", originalURL, userID)
 
-	if err := uninitializedLink.Validate(); err != nil {
+	if err := uninitializedLink.Validate(s.bannedDomains); err != nil {
 		return domain.Link{}, fmt.Errorf("validate link: %w", err)
 	}
 

@@ -21,7 +21,7 @@ func initTest(t *testing.T) (*mocks.MockRepository, *mocks.MockClickRecorder, *S
 
 	repository := mocks.NewMockRepository(ctrl)
 	recorder := mocks.NewMockClickRecorder(ctrl)
-	svc := NewService(repository, recorder)
+	svc := NewService(repository, recorder, Config{BannedDomains: []string{"tiniq.cc"}})
 
 	return repository, recorder, svc
 }
@@ -85,6 +85,42 @@ func TestCreateShortLink(t *testing.T) {
 			name:        "invalid url - unsupported scheme",
 			originalURL: "ftp://example.com",
 			wantErr:     apperrors.ErrInvalidArgument,
+		},
+		{
+			name:        "invalid url - IPv4 host",
+			originalURL: "http://127.0.0.1/",
+			wantErr:     apperrors.ErrInvalidArgument,
+		},
+		{
+			name:        "invalid url - IPv6 host",
+			originalURL: "http://[::1]/",
+			wantErr:     apperrors.ErrInvalidArgument,
+		},
+		{
+			name:        "invalid url - localhost host",
+			originalURL: "http://localhost/",
+			wantErr:     apperrors.ErrInvalidArgument,
+		},
+		{
+			name:        "invalid url - own domain",
+			originalURL: "https://tiniq.cc/",
+			wantErr:     apperrors.ErrInvalidArgument,
+		},
+		{
+			name:        "invalid url - own domain subdomain",
+			originalURL: "https://www.tiniq.cc/",
+			wantErr:     apperrors.ErrInvalidArgument,
+		},
+		{
+			name:        "invalid url - own domain lookalike suffix is allowed",
+			originalURL: "https://nottiniq.cc/",
+			setupMock: func(repo *mocks.MockRepository, originalURL string) {
+				repo.EXPECT().
+					CreateShortLink(gomock.Any(), gomock.Any(), originalURL, gomock.Any()).
+					Return(domain.Link{ShortCode: inputShortCode, OriginalURL: originalURL}, nil).
+					Times(1)
+			},
+			wantLink: domain.Link{ShortCode: inputShortCode, OriginalURL: "https://nottiniq.cc/"},
 		},
 	}
 

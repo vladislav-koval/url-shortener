@@ -12,6 +12,7 @@ import (
 type Service struct {
 	shortenerRepository Repository
 	clickRecorder       ClickRecorder
+	bannedDomains       []string
 }
 
 type Repository interface {
@@ -23,9 +24,10 @@ type ClickRecorder interface {
 	RecordClick(clickEvent events.ClickEvent)
 }
 
-func NewService(shortenerRepository Repository, clickRecorder ClickRecorder) *Service {
+func NewService(shortenerRepository Repository, clickRecorder ClickRecorder, cfg Config) *Service {
 	return &Service{
 		shortenerRepository: shortenerRepository,
 		clickRecorder:       clickRecorder,
+		bannedDomains:       cfg.BannedDomains,
 	}
 }
