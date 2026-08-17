@@ -1,26 +1,39 @@
 # url-shortener
 
-Укорачиватель ссылок на Go — с кешированием в Redis, асинхронным трекингом кликов через Kafka и продуманной архитектурой на интерфейсах, которая позволяет подменить любую технологию (Postgres, Redis, Kafka) без изменения бизнес-логики.
+Укорачиватель ссылок на Go — с авторизацией через Google, кешированием редиректов в Redis и асинхронной аналитикой переходов на отдельном gRPC-сервисе. Архитектура на интерфейсах позволяет подменить любую технологию (Postgres, Redis, Kafka) без изменения бизнес-логики.
 
 ![Go](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go&logoColor=white)
 ![Postgres](https://img.shields.io/badge/PostgreSQL-18-4169E1?logo=postgresql&logoColor=white)
 ![Redis](https://img.shields.io/badge/Redis-8-DC382D?logo=redis&logoColor=white)
 ![Redpanda](https://img.shields.io/badge/Redpanda-Kafka--compatible-E32636)
+![gRPC](https://img.shields.io/badge/gRPC-service--to--service-4285F4?logo=grpc&logoColor=white)
 [![Tests](https://github.com/vladislav-koval/url-shortener/actions/workflows/test.yml/badge.svg)](https://github.com/vladislav-koval/url-shortener/actions/workflows/test.yml)
 
 ## Что это
 
-Сервис принимает длинный URL, отдаёт короткий код, и по этому коду редиректит обратно на оригинал. Ничего необычного как продукт — необычное здесь то, **как это собрано**: проект специально написан как учебная площадка для отработки чистой слоистой архитектуры на Go, тестирования через интерфейсы и работы с реальной асинхронной инфраструктурой (не тойовой).
+Сервис принимает длинный URL, отдаёт короткий код и по этому коду редиректит обратно на оригинал. Ничего необычного как продукт — необычное здесь то, **как это собрано**: проект специально написан как учебная площадка для отработки чистой слоистой архитектуры на Go, service-to-service взаимодействия по gRPC и работы с реальной асинхронной инфраструктурой.
 
-- **Создание короткой ссылки** — `POST /link`, код генерируется криптографически стойким `crypto/rand`, коллизии решаются ретраем на уникальном ограничении БД.
-- **Редирект** — `GET /{code}`, сначала смотрит в Redis, при промахе идёт в Postgres и прогревает кеш.
-- **Трекинг кликов** — каждый переход асинхронно, не блокируя редирект пользователя, публикуется в Kafka и обрабатывается отдельным консьюмером, который батчами и идемпотентно (`ON CONFLICT DO NOTHING`) пишет клики в Postgres.
+Два независимых сервиса:
+
+- **`urlshortener`** — HTTP API: создание ссылок, редиректы, авторизация через Google, отдача статистики владельцу ссылки.
+- **`analytics`** — gRPC-сервис: консьюмит события кликов из Kafka, идемпотентно пишет их в Postgres, отдаёт агрегаты по gRPC.
+
+Основные сценарии:
+
+- **Создание короткой ссылки** — `POST /api/v1/link`, код генерируется криптографически стойким `crypto/rand`, коллизии решаются ретраем на уникальном ограничении БД. Ссылку можно создать анонимно или под своим аккаунтом (тогда она попадёт в статистику пользователя).
+- **Редирект** — `GET /{code}`, сначала смотрит в Redis, при промахе идёт в Postgres и прогревает кеш. При переходе страна и город определяются по локальной GeoLite2-базе, после чего событие неблокирующе ставится во внутреннюю очередь Kafka-writer'а.
+- **Авторизация** — Google OAuth 2.0 с PKCE, сессии хранятся в Redis (не JWT), выдаются по HttpOnly-cookie.
+- **Аналитика** — консьюмер `analytics` батчами и идемпотентно (`ON CONFLICT DO NOTHING`) пишет клики в Postgres; `urlshortener` дергает `analytics` по gRPC, чтобы отдать владельцу ссылки число кликов (`GET /api/v1/clicks`).
 
 ## Технические решения
 
-**Каждая технология подключена через интерфейс, а не напрямую.** Бизнес-логика не знает про `pgx`, `go-redis` или `kafka-go` — только про свои интерфейсы (`pool.Pool`, `cache.Pool`, `gokafka.Writer`). Конкретные реализации собираются в одном месте, `cmd/urlshortener/main.go`, так что замена технологии не требует правок в фичах.
+**Каждая технология подключена через интерфейс, а не напрямую.** Бизнес-логика не знает про `pgx`, `go-redis`, `kafka-go` или `golang.org/x/oauth2` — только про свои интерфейсы (`pool.Pool`, `cache.Pool`, `gokafka.Writer`, `service.IdentityProvider`...). Конкретные реализации собираются в одном месте на сервис — `cmd/urlshortener/main.go` и `cmd/analytics/main.go`, — так что замена технологии не требует правок в фичах.
 
-**Запись клика не завязана на контекст HTTP-запроса.** `RecordClick` вызывается из хендлера редиректа, но использует `context.Background()`, а не контекст входящего запроса. `Redirect` — момент, где клиент может оборвать соединение (закрыл вкладку, мобильная сеть), и если бы запись в Kafka зависела от его контекста, клик терялся бы из-за поведения браузера, а не проблем с Kafka. Kafka-writer сам батчит сообщения поверх **ограниченной** очереди (`QueueSize`) — без `Async: true` и без неограниченной очереди `kafka-go`. Компромисс в другую сторону: лучше потерять клик при переполнении очереди, чем уронить процесс OOM'ом на маленьком сервере; потери не тихие — считаются и периодически логируются (`Writer.Dropped()`).
+**Аналитика вынесена в отдельный сервис, а не в горутину внутри монолита.** `analytics` можно масштабировать, деплоить и перезапускать независимо от `urlshortener` — консьюмер, который пишет клики, никак не влияет на доступность редиректов. Связь между сервисами — gRPC с ретраями и per-попытка таймаутом на клиенте (`GRPC_CLIENT_MAX_RETRIES`, `GRPC_CLIENT_PER_TIMEOUT`), interceptor'ы на сервере — логирование, паника-рекавери, валидация запроса через `protoc-gen-validate` до того, как запрос дойдёт до бизнес-логики.
+
+**Запись клика не зависит от контекста HTTP-запроса.** `RecordClick` не принимает request context и неблокирующе кладёт событие в ограниченную внутреннюю очередь Kafka-writer'а. Фактическая запись в Kafka выполняется фоновой горутиной, поэтому отмена HTTP-запроса клиентом (закрыл вкладку, мобильная сеть) не отменяет уже поставленное в очередь событие. Kafka-writer сам батчит сообщения поверх **ограниченной** очереди (`QueueSize`) — без `Async: true` и без неограниченной очереди `kafka-go`. Компромисс в другую сторону: лучше потерять клик при переполнении очереди, чем уронить процесс OOM'ом на маленьком сервере; потери не тихие — считаются и периодически логируются (`Writer.Dropped()`). На стороне консьюмера — свой ретрай перед коммитом оффсетов: батч, который не удалось сохранить в Postgres, повторяется с бэкоффом, а не роняет консьюмер.
+
+**Сбой GeoIP не ломает редирект.** Резолвинг страны/города выполняется синхронно по локальной GeoLite2-базе. Ошибка lookup логируется, но не прерывает редирект: событие отправляется с пустыми geo-полями. Если база недоступна при старте и `GEO_REQUIRED=false`, используется `NoopResolver`.
 
 **Маппинг ошибок библиотек тестируется в два слоя.** Каждый адаптер (`pgx`, `go-redis`) транслирует ошибки библиотек в свои сентинелы (`pool.ErrNotFound`, `cache.ErrNotFound`...). Тест на голую функцию маппинга не ловит случай "забыли вызвать маппер внутри метода-обёртки" — код компилируется, ошибка просто перестаёт совпадать выше по стеку. Поэтому тесты идут парой: маппер отдельно и обёртка, которая доказывает, что маппер реально вызывается.
 
@@ -32,25 +45,40 @@
 flowchart LR
     Client([Клиент])
 
-    subgraph Application["URL Shortener Application"]
+    subgraph ShortenerApp["urlshortener"]
+        Auth["Auth<br/>Google OAuth 2.0 + PKCE"]
         Shortener["Shortener API<br/>создание ссылок и редиректы"]
-        Consumer["Analytics Consumer<br/>обработка переходов"]
+        Stats["Stats API<br/>статистика владельца"]
+    end
+
+    subgraph AnalyticsApp["analytics"]
+        Consumer["Clicks Consumer<br/>обработка переходов"]
+        GRPCServer["gRPC сервер<br/>агрегаты по кликам"]
     end
 
     subgraph Infrastructure["Infrastructure"]
-        Redis[("Redis<br/>кеш ссылок")]
+        Redis[("Redis<br/>кеш ссылок + сессии")]
         Kafka[/"Kafka topic<br/>click-events (Redpanda)"/]
-        Postgres[("PostgreSQL<br/>ссылки и аналитика")]
+        Postgres[("PostgreSQL<br/>ссылки, пользователи, клики")]
+        GeoDB[("GeoLite2<br/>.mmdb")]
     end
 
     Client -->|"POST /api/v1/link<br/>GET /{code}"| Shortener
+    Client -->|"/api/v1/auth/google/*"| Auth
+    Client -->|"GET /api/v1/clicks"| Stats
 
     Shortener <-->|"кеширование ссылок"| Redis
-    Shortener -->|"сохранение и чтение ссылок"| Postgres
+    Shortener -->|"чтение/запись ссылок"| Postgres
+    Shortener -->|"IP клика"| GeoDB
+    Auth <-->|"сессии"| Redis
+    Auth -->|"upsert пользователя"| Postgres
 
-    Shortener -.->|"событие перехода"| Kafka
-    Kafka -->|"события переходов"| Consumer
-    Consumer -->|"сохранение аналитики"| Postgres
+    Shortener -.->|"событие перехода + geo"| Kafka
+    Kafka --> Consumer
+    Consumer -->|"батчами, идемпотентно"| Postgres
+
+    Stats -.->|"gRPC GetLinkClickCounts"| GRPCServer
+    GRPCServer -->|"агрегаты кликов"| Postgres
 ```
 
 ## Стек
@@ -58,46 +86,64 @@ flowchart LR
 | Слой | Технология |
 |---|---|
 | Язык | Go 1.26 |
-| HTTP | `net/http` + свой роутер/middleware (CORS, RequestID, структурные логи, паника-рекавери) |
+| HTTP | `net/http` + свой роутер/middleware (CORS, RequestID, структурные логи, паника-рекавери, auth) |
+| gRPC | `google.golang.org/grpc`, валидация через `protoc-gen-validate`, кодогенерация — `easyp` |
 | БД | PostgreSQL 18, `jackc/pgx/v5`, миграции — `golang-migrate` |
-| Кеш | Redis 8, `redis/go-redis/v9` |
+| Кеш / сессии | Redis 8, `redis/go-redis/v9` |
 | Очередь | Redpanda (single-node, Kafka wire-протокол), `segmentio/kafka-go` |
+| Авторизация | Google OAuth 2.0 + PKCE (`golang.org/x/oauth2`, `google.golang.org/api/idtoken`) |
+| GeoIP | MaxMind GeoLite2 City, `oschwald/geoip2-golang` |
 | Логирование | `go.uber.org/zap`, структурные JSON-логи с `request_id` |
 | Конфигурация | `kelseyhightower/envconfig`, свой `Config` на каждый пакет |
-| Валидация | `go-playground/validator/v10` |
+| Валидация | `go-playground/validator/v10` (HTTP), `protoc-gen-validate` (gRPC) |
 | Тесты | `stretchr/testify`, `go.uber.org/mock` (`mockgen`) |
-| Инфраструктура | Docker Compose (Postgres, Redis, Redpanda одним поднятием) |
+| Инфраструктура | Docker Compose (Postgres, Redis, Redpanda, Caddy — одним поднятием) |
 
 ## API
 
+### `urlshortener`
+
 | Метод | Путь | Описание |
 |---|---|---|
-| `POST` | `/api/v1/link` | Создать короткую ссылку. Тело: `{"url": "https://example.com"}` → `201` `{"short_code": "...", "original_url": "..."}` |
-| `GET` | `/{code}` | Редирект на оригинальный URL (`302`), либо `404 not_found`. Без версии — короткая ссылка не должна тащить на себе `/api/v1` |
+| `POST` | `/api/v1/link` | Создать короткую ссылку. Тело: `{"url": "https://example.com"}` → `201` `{"short_code": "...", "original_url": "..."}`. Если запрос авторизован — ссылка привязывается к пользователю. |
+| `GET` | `/{code}` | Редирект на оригинальный URL (`302`), либо `404 not_found`. Без версии — короткая ссылка не должна тащить на себе `/api/v1`. |
+| `GET` | `/api/v1/auth/google/login` | Начало OAuth-флоу, редирект на Google. |
+| `GET` | `/api/v1/auth/google/callback` | Callback от Google, обмен кода на токен, выдача сессионной cookie. |
+| `POST` | `/api/v1/auth/logout` | Завершить сессию. |
+| `GET` | `/api/v1/clicks` | Статистика кликов по ссылкам текущего пользователя (пагинация). Требует авторизации. |
 
 Ошибки — единый JSON-контракт (`{"code": "...", "message": "...", "details": [...]}`), собственный текст ошибки клиенту никогда не уходит, только в лог.
+
+### `analytics` (gRPC, внутренний)
+
+| RPC | Описание |
+|---|---|
+| `GetLinkClickCounts(short_codes[])` | Вернуть число кликов по списку коротких кодов (до 100 за раз). Используется `urlshortener` для `/api/v1/clicks`, наружу не выставлен. |
 
 ## Быстрый старт
 
 ```bash
 cp .env.example .env
 docker compose up -d postgres redis redpanda port-forwarder # инфра для локальной разработки
-make migrate-up       # применяет миграции
-make kafka-topic-init # создаёт Kafka-топик (idempotent)
-make run              # go mod tidy && go run ./cmd/urlshortener
+make migrate-up          # применяет миграции
+make kafka-topic-init    # создаёт Kafka-топик (idempotent)
+make run                 # go mod tidy && go run ./cmd/urlshortener
+make run-analytics       # в отдельном терминале: go mod tidy && go run ./cmd/analytics
 ```
 
-Сервер поднимется на `HTTP_ADDR` из `.env` (по умолчанию `:5050`).
+`urlshortener` поднимется на `HTTP_ADDR` из `.env` (по умолчанию `:5050`), `analytics` слушает gRPC на `GRPC_ADDR` (по умолчанию `:50051`).
 
-`docker-compose.yml` теперь содержит не только инфраструктуру, но и полный прод-стек (`caddy`, `shortener`, `analytics`, `frontend`) — эти сервисы без `profiles`, поэтому голый `make env-up` (`docker compose up -d`) поднимет и их тоже, включая сборку `frontend` из соседнего репозитория `../url-shortener-front`. Для локальной разработки бэкенда явно перечисляй нужные сервисы, как выше, а не полагайся на `make env-up`.
+`docker-compose.yml` содержит не только инфраструктуру, но и полный прод-стек (`caddy`, `shortener`, `analytics`, `frontend`) — эти сервисы без `profiles`, поэтому голый `make env-up` (`docker compose up -d`) поднимет и их тоже, включая сборку `frontend` из соседнего репозитория `../url-shortener-front`. Для локальной разработки бэкенда явно перечисляй нужные сервисы, как выше, а не полагайся на `make env-up`.
 
-**GeoIP-база.** Резолвинг страны/города по IP клика использует локальную базу MaxMind GeoLite2 City в формате `.mmdb`. Файл не лежит в репозитории
+**GeoIP-база.** Резолвинг страны/города по IP клика использует локальную базу MaxMind GeoLite2 City в формате `.mmdb`. Файл не лежит в репозитории:
 
 1. Завести бесплатный аккаунт на [maxmind.com](https://www.maxmind.com/en/geolite2/signup) и сгенерировать license key.
 2. Скачать `GeoLite2-City.mmdb` (вручную через личный кабинет или через `geoipupdate`).
 3. Положить файл по пути из `GEO_FILE_PATH` в `.env` (по умолчанию `data/geo-city.mmdb`, директория `data/` в `.gitignore`).
 
-Без этого файла `urlshortener` не стартует — `geo.NewClient` фейлится при инициализации.
+Если файла нет и `GEO_REQUIRED=false` (по умолчанию) — сервис стартует, но клики пишутся без страны/города. При `GEO_REQUIRED=true` отсутствие базы — фатальная ошибка при старте.
+
+**Google OAuth.** Нужен OAuth-клиент в [Google Cloud Console](https://console.cloud.google.com/apis/credentials) с redirect URI, равным `GOOGLE_AUTH_CALLBACK_URL` из `.env`. `GOOGLE_AUTH_CLIENT_ID` / `GOOGLE_AUTH_CLIENT_SECRET` — оттуда же.
 
 ## Тестирование
 
@@ -106,30 +152,38 @@ go test ./...
 go vet ./...
 ```
 
-Юнит-тесты покрывают весь путь от бизнес-логики до адаптеров технологий: сервисный слой (табличные тесты с моками через `go.uber.org/mock`), кеширующий репозиторий (cache-hit/miss/деградация, включая проверку факта логирования через `zap/zaptest/observer`), и маппинг ошибок обоих драйверов — Postgres и Redis — в два слоя (сама функция маппинга + доказательство, что обёртка её реально вызывает). Real-DB-путь (реальный `pgxpool.Pool`, реальное сетевое подключение) осознанно вынесен за границу юнит-тестов — это территория будущего интеграционного слоя на `testcontainers-go`.
+Юнит-тесты покрывают весь путь от бизнес-логики до адаптеров технологий: сервисный слой (табличные тесты с моками через `go.uber.org/mock`), кеширующий репозиторий (cache-hit/miss/деградация, включая проверку факта логирования через `zap/zaptest/observer`), маппинг ошибок обоих драйверов — Postgres и Redis — в два слоя (сама функция маппинга + доказательство, что обёртка её реально вызывает), а также gRPC-хендлеры и Google OAuth провайдер. Real-DB-путь (реальный `pgxpool.Pool`, реальное сетевое подключение) осознанно вынесен за границу юнит-тестов — это территория будущего интеграционного слоя на `testcontainers-go`.
 
 ## Структура проекта
 
 ```
-cmd/urlshortener/        — точка сборки, здесь и только здесь конкретные технологии
-internal/core/           — технологии (Postgres/Redis/Kafka/HTTP), домен, общие ошибки
-  repository/postgres/pool     — интерфейс pool.Pool + драйвер pgx
-  repository/redis             — интерфейс cache.Pool + драйвер goredis
-  messaging/gokafka             — интерфейс Writer/Reader + драйвер segmentio
-internal/features/
-  shortener/              — создание ссылок, редирект, продюсер кликов
-  analytics/              — консьюмер кликов, сохранение в Postgres
-migrations/               — golang-migrate SQL-миграции
+cmd/
+  urlshortener/            — точка сборки HTTP-сервиса, здесь и только здесь конкретные технологии
+  analytics/                — точка сборки gRPC-сервиса аналитики
+api/
+  proto/                     — .proto контракты
+  gen/                       — сгенерированный gRPC/validate код (easyp)
+internal/
+  platform/                  — технологии (Postgres/Redis/Kafka/HTTP/gRPC), домен, общие ошибки, geo, авторизация
+    repository/postgres/pool     — интерфейс pool.Pool + драйвер pgx
+    repository/redis              — интерфейс cache.Pool + драйвер goredis
+    messaging/gokafka              — интерфейс Writer/Reader + драйвер segmentio
+    transport/grpc                 — сервер, клиент, interceptor'ы
+  shortener/                 — HTTP-сервис urlshortener
+    urls/                         — создание ссылок, редирект, продюсер кликов
+    auth/                          — Google OAuth, сессии
+    stats/                         — статистика владельца (gRPC-клиент к analytics)
+  analytics/                 — gRPC-сервис analytics
+    clicks/                       — консьюмер кликов, сохранение в Postgres
+    stats/                         — gRPC-хендлер агрегатов
+migrations/                  — golang-migrate SQL-миграции
 ```
 
 Подробные архитектурные соглашения (нейминг, где объявляются интерфейсы, паттерны конфигурации) описаны в [CLAUDE.md](CLAUDE.md).
 
 ## Что дальше
 
-- **Авторизация и регистрация пользователей** — без привязки ссылки к владельцу непонятно, кому вообще показывать её статистику.
-- **Статистика по ссылкам, доступная только владельцу** — HTTP-эндпоинт поверх уже пишущего консьюмера аналитики:
-  - общее число кликов по ссылке;
-  - график кликов по времени — когда была активность выше/ниже;
-  - разбивка кликов по странам и городам на основе IP (вероятно, локальная GeoIP-база вместо интеграции со внешним сервисом).
 - Интеграционные тесты на `testcontainers-go` поверх реального Postgres/Redis/Kafka.
-- Таймауты на `http.Server` (`ReadTimeout`/`WriteTimeout`/`IdleTimeout`) — сейчас единственная защита от зависшего хендлера — таймауты самой Kafka-библиотеки и клиента.
+- Таймауты HTTP-сервера (`ReadHeaderTimeout`/`ReadTimeout`/`WriteTimeout`/`IdleTimeout`).
+- Prometheus-метрики (латентность редиректа, cache hit-rate, lag консьюмера).
+- График кликов по времени и разбивка по странам/городам в `/api/v1/clicks` — данные уже пишутся, агрегации по времени пока нет.
