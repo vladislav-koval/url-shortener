@@ -87,7 +87,7 @@ func Trace() Middleware {
 			)
 
 			defer func() {
-				log.Debug(
+				log.Info(
 					"<<< done request",
 					zap.Int("status_code", rw.GetStatusCode()),
 					zap.Duration("latency", time.Since(before)),

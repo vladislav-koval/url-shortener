@@ -42,9 +42,9 @@ func Run(
 	shutdownStart := time.Now()
 
 	if ctx.Err() != nil {
-		log.Warn("shutdown signal received")
+		log.Info("shutdown signal received")
 	} else {
-		log.Warn("background component failed, shutting down")
+		log.Error("background component failed, shutting down")
 	}
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -69,5 +69,5 @@ func Run(
 		closer(shutdownCtx)
 	}
 
-	log.Warn("shutdown complete", zap.Duration("took", time.Since(shutdownStart)))
+	log.Info("shutdown complete", zap.Duration("took", time.Since(shutdownStart)))
 }

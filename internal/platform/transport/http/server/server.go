@@ -54,7 +54,7 @@ func (s *HTTPServer) RegisterRoutes(routes ...Route) {
 }
 
 func (s *HTTPServer) Run() error {
-	s.log.Warn("starting http server", zap.String("addr", s.config.Addr))
+	s.log.Info("starting http server", zap.String("addr", s.config.Addr))
 
 	if err := s.server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 		return fmt.Errorf("http server: %w", err)
@@ -64,7 +64,7 @@ func (s *HTTPServer) Run() error {
 }
 
 func (s *HTTPServer) Shutdown(ctx context.Context) error {
-	s.log.Warn("shutdown http server", zap.String("addr", s.config.Addr))
+	s.log.Info("shutdown http server", zap.String("addr", s.config.Addr))
 
 	if err := s.server.Shutdown(ctx); err != nil {
 		_ = s.server.Close()
@@ -72,7 +72,7 @@ func (s *HTTPServer) Shutdown(ctx context.Context) error {
 		return fmt.Errorf("shutdown http server: %w", err)
 	}
 
-	s.log.Warn("http server stopped", zap.String("addr", s.config.Addr))
+	s.log.Info("http server stopped", zap.String("addr", s.config.Addr))
 
 	return nil
 }
