@@ -31,7 +31,7 @@ func (s *GRPCServer) Registrar() grpc.ServiceRegistrar {
 }
 
 func (s *GRPCServer) Run() error {
-	s.log.Warn("starting grpc server", zap.String("addr", s.config.Addr))
+	s.log.Info("starting grpc server", zap.String("addr", s.config.Addr))
 
 	l, err := net.Listen("tcp", s.config.Addr)
 
@@ -47,7 +47,7 @@ func (s *GRPCServer) Run() error {
 }
 
 func (s *GRPCServer) Shutdown(ctx context.Context) error {
-	s.log.Warn("shutdown grpc server", zap.String("addr", s.config.Addr))
+	s.log.Info("shutdown grpc server", zap.String("addr", s.config.Addr))
 
 	done := make(chan struct{})
 
@@ -58,7 +58,7 @@ func (s *GRPCServer) Shutdown(ctx context.Context) error {
 
 	select {
 	case <-done:
-		s.log.Warn("grpc server stopped", zap.String("addr", s.config.Addr))
+		s.log.Info("grpc server stopped", zap.String("addr", s.config.Addr))
 		return nil
 
 	case <-ctx.Done():
