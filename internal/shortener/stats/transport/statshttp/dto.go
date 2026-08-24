@@ -1,10 +1,16 @@
 package statshttp
 
-import "github.com/vladislav-koval/url-shortener/internal/shortener/stats/domain"
+import (
+	"time"
+
+	"github.com/vladislav-koval/url-shortener/internal/shortener/stats/domain"
+)
 
 type ClickCount struct {
-	ShortCode  string `json:"short_code"`
-	ClickCount int    `json:"click_count"`
+	ShortCode   string `json:"short_code"`
+	OriginalURL string `json:"original_url"`
+	ClickCount  int    `json:"click_count"`
+	CreatedAt   string `json:"created_at"`
 }
 
 type ClickCountResponse struct {
@@ -12,13 +18,15 @@ type ClickCountResponse struct {
 	Total int          `json:"total"`
 }
 
-func domainToResponse(page domain.LinkClickCountPage) ClickCountResponse {
+func domainToResponse(page domain.LinkStatsPage) ClickCountResponse {
 	items := make([]ClickCount, len(page.Items))
 
 	for i, item := range page.Items {
 		items[i] = ClickCount{
-			ShortCode:  item.ShortCode,
-			ClickCount: item.ClickCount,
+			ShortCode:   item.ShortCode,
+			OriginalURL: item.OriginalURL,
+			ClickCount:  item.ClickCount,
+			CreatedAt:   item.CreatedAt.Format(time.RFC3339),
 		}
 	}
 

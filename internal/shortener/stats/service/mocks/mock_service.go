@@ -43,20 +43,20 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 	return m.recorder
 }
 
-// GetShortCodesByUserID mocks base method.
-func (m *MockRepository) GetShortCodesByUserID(ctx context.Context, userID uuid.UUID, p pagination.Pagination) ([]string, int, error) {
+// GetLinksByUserID mocks base method.
+func (m *MockRepository) GetLinksByUserID(ctx context.Context, userID uuid.UUID, p pagination.Pagination) ([]domain.Link, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetShortCodesByUserID", ctx, userID, p)
-	ret0, _ := ret[0].([]string)
+	ret := m.ctrl.Call(m, "GetLinksByUserID", ctx, userID, p)
+	ret0, _ := ret[0].([]domain.Link)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
 
-// GetShortCodesByUserID indicates an expected call of GetShortCodesByUserID.
-func (mr *MockRepositoryMockRecorder) GetShortCodesByUserID(ctx, userID, p any) *gomock.Call {
+// GetLinksByUserID indicates an expected call of GetLinksByUserID.
+func (mr *MockRepositoryMockRecorder) GetLinksByUserID(ctx, userID, p any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetShortCodesByUserID", reflect.TypeOf((*MockRepository)(nil).GetShortCodesByUserID), ctx, userID, p)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLinksByUserID", reflect.TypeOf((*MockRepository)(nil).GetLinksByUserID), ctx, userID, p)
 }
 
 // MockGRPCClient is a mock of GRPCClient interface.

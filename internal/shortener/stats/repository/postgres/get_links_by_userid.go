@@ -6,9 +6,10 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/vladislav-koval/url-shortener/internal/platform/pagination"
+	"github.com/vladislav-koval/url-shortener/internal/shortener/stats/domain"
 )
 
-func (repo *Repository) GetShortCodesByUserID(ctx context.Context, userID uuid.UUID, p pagination.Pagination) ([]string, int, error) {
+func (repo *Repository) GetLinksByUserID(ctx context.Context, userID uuid.UUID, p pagination.Pagination) ([]domain.Link, int, error) {
 	ctx, cancel := context.WithTimeout(ctx, repo.pool.OpTimeout())
 	defer cancel()
 
@@ -25,10 +26,10 @@ func (repo *Repository) GetShortCodesByUserID(ctx context.Context, userID uuid.U
 		return nil, 0, fmt.Errorf("scan error: %w", err)
 	}
 
-	query := `SELECT short_code
+	query := `SELECT short_code, original_url, created_at
 				FROM urlshortener.links
 				WHERE user_id = $1
-				ORDER BY short_code ASC
+				ORDER BY created_at DESC
 				LIMIT $2
 				OFFSET $3;
 	`
@@ -39,20 +40,20 @@ func (repo *Repository) GetShortCodesByUserID(ctx context.Context, userID uuid.U
 	}
 	defer rows.Close()
 
-	shortCodes := make([]string, 0, p.Limit)
+	links := make([]linkRow, 0, p.Limit)
 
 	for rows.Next() {
-		var shortCode string
-		err := rows.Scan(&shortCode)
+		var link linkRow
+		err := rows.Scan(&link.shortCode, &link.originalUrl, &link.createdAt)
 		if err != nil {
-			return nil, 0, fmt.Errorf("scan short code: %w", err)
+			return nil, 0, fmt.Errorf("scan link: %w", err)
 		}
 
-		shortCodes = append(shortCodes, shortCode)
+		links = append(links, link)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, 0, fmt.Errorf("next rows: %w", err)
 	}
 
-	return shortCodes, totalCount, nil
+	return linksFromRow(links), totalCount, nil
 }

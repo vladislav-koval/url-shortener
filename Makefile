@@ -19,6 +19,9 @@ run-analytics:
 env-up:
 	@docker compose up -d
 
+env-dev-up:
+	@docker compose up -d redpanda redis postgres
+
 env-cleanup: ## env: Очистить окружение проекта
 	@read -p "Remove all volumes?. [y/N]: " ans; \
 	if [ "$$ans" = "y" ]; then \
@@ -78,13 +81,15 @@ EASYP_VERSION := v0.16.6
 PROTOC_GEN_GO_VERSION := v1.36.11
 PROTOC_GEN_GO_GRPC_VERSION := v1.6.2
 PROTOC_GEN_VALIDATE := v1.3.3
+MOCKGEN_VERSION := v0.6.0
 
 .PHONY: tools
-tools: ## Установить easyp и protoc-плагины, зафиксированных версий
+tools: ## Установить easyp, protoc-плагины и mockgen зафиксированных версий
 	go install github.com/easyp-tech/easyp/cmd/easyp@$(EASYP_VERSION)
 	go install google.golang.org/protobuf/cmd/protoc-gen-go@$(PROTOC_GEN_GO_VERSION)
 	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@$(PROTOC_GEN_GO_GRPC_VERSION)
 	go install github.com/envoyproxy/protoc-gen-validate@$(PROTOC_GEN_VALIDATE)
+	go install go.uber.org/mock/mockgen@$(MOCKGEN_VERSION)
 
 .PHONY: proto
 proto: ## Сгенерировать Go-код из .proto (api/proto -> api/gen)
@@ -106,3 +111,9 @@ proto-check: proto ## CI-проверка: сгенерённый код не р
 		git status --porcelain api/gen && \
 		exit 1; \
 	fi
+
+gen: ## Сгенерировать все моки в проекте
+	@go generate ./...
+
+test: ## Запустить быстрые юнит-тесты
+	@go test -v -short ./...
