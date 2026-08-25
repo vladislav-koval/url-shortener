@@ -16,7 +16,7 @@ type Handler struct {
 }
 
 type Service interface {
-	GetClickCounts(ctx context.Context, userID uuid.UUID, pagination pagination.Pagination) (domain.LinkClickCountPage, error)
+	GetLinkStats(ctx context.Context, userID uuid.UUID, pagination pagination.Pagination) (domain.LinkStatsPage, error)
 }
 
 func NewHTTPHandler(s Service) *Handler {
@@ -30,7 +30,7 @@ func (h *Handler) APIRoutes(resolver authorization.Resolver, cookieSecure bool) 
 		{
 			Method:     "GET",
 			Path:       "/clicks",
-			Handler:    h.GetClickCounts,
+			Handler:    h.GetLinkStats,
 			Middleware: []middleware.Middleware{middleware.CurrentUser(resolver, cookieSecure), middleware.RequireUser()},
 		},
 	}

@@ -15,7 +15,7 @@ type Service struct {
 }
 
 type Repository interface {
-	GetShortCodesByUserID(ctx context.Context, userID uuid.UUID, p pagination.Pagination) ([]string, int, error)
+	GetLinksByUserID(ctx context.Context, userID uuid.UUID, p pagination.Pagination) ([]domain.Link, int, error)
 }
 
 type GRPCClient interface {
