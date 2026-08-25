@@ -2,6 +2,7 @@ package google
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/kelseyhightower/envconfig"
 )
@@ -10,6 +11,8 @@ type Config struct {
 	GoogleClientID     string `envconfig:"CLIENT_ID" required:"true"`
 	GoogleClientSecret string `envconfig:"CLIENT_SECRET" required:"true"`
 	GoogleCallbackURL  string `envconfig:"CALLBACK_URL" required:"true"`
+
+	ExchangeTimeout time.Duration `envconfig:"EXCHANGE_TIMEOUT" default:"10s"`
 }
 
 func NewConfig() (Config, error) {

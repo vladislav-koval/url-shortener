@@ -6,6 +6,7 @@ package google
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"golang.org/x/oauth2"
 	googleoauth "golang.org/x/oauth2/google"
@@ -15,7 +16,8 @@ import (
 )
 
 type Provider struct {
-	oauthConfig *oauth2.Config
+	oauthConfig     *oauth2.Config
+	exchangeTimeout time.Duration
 }
 
 func NewProvider(cfg Config) *Provider {
@@ -27,10 +29,13 @@ func NewProvider(cfg Config) *Provider {
 		Endpoint:     googleoauth.Endpoint,
 	}
 
-	return &Provider{oauthConfig: googleOAuth}
+	return &Provider{oauthConfig: googleOAuth, exchangeTimeout: cfg.ExchangeTimeout}
 }
 
 func (p *Provider) Exchange(ctx context.Context, code string, verifier string) (domain.GoogleIdentity, error) {
+	ctx, cancel := context.WithTimeout(ctx, p.exchangeTimeout)
+	defer cancel()
+
 	token, err := p.oauthConfig.Exchange(ctx, code, oauth2.VerifierOption(verifier))
 	if err != nil {
 		return domain.GoogleIdentity{}, fmt.Errorf("exchange authorization code: %w", err)

@@ -39,6 +39,8 @@
 
 **Отказ кеша не роняет запрос.** Если Redis недоступен при чтении или записи кеша, сервис логирует это и продолжает работать через Postgres напрямую. Это поведение покрыто тестами, включая разницу между обычным промахом кеша (`ErrNotFound`, ничего не логируется) и реальным сбоем Redis (логируется) — это разные, отдельно протестированные ветки.
 
+**Таймаут — на каждый блокирующий вызов отдельно, а не один общий на запрос.** `http.Server` настроен через `HTTP_READ_HEADER_TIMEOUT`/`HTTP_READ_TIMEOUT`/`HTTP_WRITE_TIMEOUT`/`HTTP_IDLE_TIMEOUT` (защита от медленного клиента). Плюс свой таймаут на каждый внешний вызов: `POSTGRES_TIMEOUT` (`pool.OpTimeout()`), `GRPC_CLIENT_PER_TIMEOUT` с ретраями, `GOOGLE_AUTH_EXCHANGE_TIMEOUT` на обмен кода и валидацию `id_token`.
+
 ## Архитектура
 
 ```mermaid
@@ -186,6 +188,5 @@ migrations/                  — golang-migrate SQL-миграции
 ## Что дальше
 
 - Интеграционные тесты на `testcontainers-go` поверх реального Postgres/Redis/Kafka.
-- Таймауты HTTP-сервера (`ReadHeaderTimeout`/`ReadTimeout`/`WriteTimeout`/`IdleTimeout`).
 - Prometheus-метрики (латентность редиректа, cache hit-rate, lag консьюмера).
 - График кликов по времени и разбивка по странам/городам в `/api/v1/clicks` — данные уже пишутся, агрегации по времени пока нет.
