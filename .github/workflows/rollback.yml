@@ -1,0 +1,32 @@
+name: Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: "SHA коммита, на который откатываем backend"
+        required: true
+        type: string
+
+jobs:
+  rollback:
+    name: Rollback backend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Rollback shortener and analytics
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            set -e
+
+            cd ${{ secrets.DEPLOY_PATH }}
+
+            IMAGE_TAG=${{ inputs.sha }} docker compose pull shortener analytics
+
+            IMAGE_TAG=${{ inputs.sha }} docker compose up -d --no-deps shortener analytics
+
+            docker compose ps shortener analytics

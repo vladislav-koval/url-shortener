@@ -18,7 +18,8 @@ services:
     build:
       context: .
       dockerfile: ./cmd/analytics/Dockerfile
-    image: ghcr.io/vladislav-koval/url-shortener/analytics:latest
+    # IMAGE_TAG для rollback.yml.
+    image: ghcr.io/vladislav-koval/url-shortener/analytics:${IMAGE_TAG:-latest}
     container_name: analytics
     environment:
       - GRPC_ADDR
@@ -44,7 +45,8 @@ services:
     build:
       context: .
       dockerfile: ./cmd/urlshortener/Dockerfile
-    image: ghcr.io/vladislav-koval/url-shortener/shortener:latest
+    # IMAGE_TAG для rollback.yml.
+    image: ghcr.io/vladislav-koval/url-shortener/shortener:${IMAGE_TAG:-latest}
     container_name: shortener
     environment:
       - GRPC_ADDR
