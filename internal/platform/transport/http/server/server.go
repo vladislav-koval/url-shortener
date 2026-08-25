@@ -26,8 +26,12 @@ func NewHTTPServer(config Config, log *logger.Logger, middlewares ...middleware.
 	return &HTTPServer{
 		mux: mux,
 		server: &http.Server{
-			Addr:    config.Addr,
-			Handler: middleware.ChainMiddlewares(mux, middlewares...),
+			Addr:              config.Addr,
+			Handler:           middleware.ChainMiddlewares(mux, middlewares...),
+			ReadHeaderTimeout: config.ReadHeaderTimeout,
+			ReadTimeout:       config.ReadTimeout,
+			WriteTimeout:      config.WriteTimeout,
+			IdleTimeout:       config.IdleTimeout,
 		},
 		config: config,
 		log:    log,
