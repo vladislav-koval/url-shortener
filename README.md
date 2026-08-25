@@ -20,10 +20,10 @@
 
 Основные сценарии:
 
-- **Создание короткой ссылки** — `POST /api/v1/link`, код генерируется криптографически стойким `crypto/rand`, коллизии решаются ретраем на уникальном ограничении БД. Ссылку можно создать анонимно или под своим аккаунтом (тогда она попадёт в статистику пользователя).
+- **Создание короткой ссылки** — `POST /api/v1/link`, код генерируется криптографически стойким `crypto/rand`, коллизии решаются ретраем на уникальном ограничении БД. Ссылку можно создать анонимно или под своим аккаунтом (тогда она попадёт в статистику пользователя). Целевой URL не может быть IP-адресом, `localhost` или собственным доменом сервиса (включая поддомены) — защита от бессмысленных/мусорных ссылок.
 - **Редирект** — `GET /{code}`, сначала смотрит в Redis, при промахе идёт в Postgres и прогревает кеш. При переходе страна и город определяются по локальной GeoLite2-базе, после чего событие неблокирующе ставится во внутреннюю очередь Kafka-writer'а.
 - **Авторизация** — Google OAuth 2.0 с PKCE, сессии хранятся в Redis (не JWT), выдаются по HttpOnly-cookie.
-- **Аналитика** — консьюмер `analytics` батчами и идемпотентно (`ON CONFLICT DO NOTHING`) пишет клики в Postgres; `urlshortener` дергает `analytics` по gRPC, чтобы отдать владельцу ссылки число кликов (`GET /api/v1/clicks`).
+- **Аналитика** — консьюмер `analytics` батчами и идемпотентно (`ON CONFLICT DO NOTHING`) пишет клики в Postgres; `urlshortener` дергает `analytics` по gRPC и отдаёт владельцу список его ссылок с числом кликов на каждую, с пагинацией (`GET /api/v1/clicks`).
 
 ## Технические решения
 
@@ -97,7 +97,7 @@ flowchart LR
 | Конфигурация | `kelseyhightower/envconfig`, свой `Config` на каждый пакет |
 | Валидация | `go-playground/validator/v10` (HTTP), `protoc-gen-validate` (gRPC) |
 | Тесты | `stretchr/testify`, `go.uber.org/mock` (`mockgen`) |
-| Инфраструктура | Docker Compose (Postgres, Redis, Redpanda, Caddy — одним поднятием) |
+| Инфраструктура | Docker Compose. Один файл описывает и dev-инфру (Postgres, Redis, Redpanda), и полный прод-стек (+ Caddy, `shortener`, `analytics`, `frontend`) — для локальной разработки нужно явно перечислить нужное подмножество сервисов, см. "Локальная разработка" |
 
 ## API
 
@@ -110,7 +110,7 @@ flowchart LR
 | `GET` | `/api/v1/auth/google/login` | Начало OAuth-флоу, редирект на Google. |
 | `GET` | `/api/v1/auth/google/callback` | Callback от Google, обмен кода на токен, выдача сессионной cookie. |
 | `POST` | `/api/v1/auth/logout` | Завершить сессию. |
-| `GET` | `/api/v1/clicks` | Статистика кликов по ссылкам текущего пользователя (пагинация). Требует авторизации. |
+| `GET` | `/api/v1/clicks` | Ссылки текущего пользователя с числом кликов на каждую (пагинация): `{"items": [{"short_code": "...", "original_url": "...", "click_count": 0, "created_at": "..."}], "total": 0}`. Требует авторизации. |
 
 Ошибки — единый JSON-контракт (`{"code": "...", "message": "...", "details": [...]}`), собственный текст ошибки клиенту никогда не уходит, только в лог.
 
@@ -120,11 +120,13 @@ flowchart LR
 |---|---|
 | `GetLinkClickCounts(short_codes[])` | Вернуть число кликов по списку коротких кодов (до 100 за раз). Используется `urlshortener` для `/api/v1/clicks`, наружу не выставлен. |
 
-## Быстрый старт
+## Локальная разработка
+
+На проде всё (`caddy`, `shortener`, `analytics`, `frontend` + инфра) поднимается вместе в докер-контейнерах через один `docker-compose.yml`. Локально бэкенд удобнее гонять нативно (`go run`), а в докере держать только инфраструктуру:
 
 ```bash
 cp .env.example .env
-docker compose up -d postgres redis redpanda port-forwarder # инфра для локальной разработки
+make env-dev-up          # поднимает Postgres, Redis, Redpanda + port-forwarder (доступ к Postgres с хоста)
 make migrate-up          # применяет миграции
 make kafka-topic-init    # создаёт Kafka-топик (idempotent)
 make run                 # go mod tidy && go run ./cmd/urlshortener
@@ -133,7 +135,7 @@ make run-analytics       # в отдельном терминале: go mod tidy
 
 `urlshortener` поднимется на `HTTP_ADDR` из `.env` (по умолчанию `:5050`), `analytics` слушает gRPC на `GRPC_ADDR` (по умолчанию `:50051`).
 
-`docker-compose.yml` содержит не только инфраструктуру, но и полный прод-стек (`caddy`, `shortener`, `analytics`, `frontend`) — эти сервисы без `profiles`, поэтому голый `make env-up` (`docker compose up -d`) поднимет и их тоже, включая сборку `frontend` из соседнего репозитория `../url-shortener-front`. Для локальной разработки бэкенда явно перечисляй нужные сервисы, как выше, а не полагайся на `make env-up`.
+`docker-compose.yml` содержит не только инфраструктуру, но и полный прод-стек (`caddy`, `shortener`, `analytics`, `frontend`) — эти сервисы без `profiles`, поэтому голый `make env-up` (`docker compose up -d`) поднимет и их тоже, включая сборку `frontend` из соседнего репозитория `../url-shortener-front`. Для локальной разработки бэкенда используй `make env-dev-up`, а не `make env-up`.
 
 **GeoIP-база.** Резолвинг страны/города по IP клика использует локальную базу MaxMind GeoLite2 City в формате `.mmdb`. Файл не лежит в репозитории:
 

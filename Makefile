@@ -20,7 +20,7 @@ env-up:
 	@docker compose up -d
 
 env-dev-up:
-	@docker compose up -d redpanda redis postgres
+	@docker compose up -d redpanda redis postgres port-forwarder
 
 env-cleanup: ## env: Очистить окружение проекта
 	@read -p "Remove all volumes?. [y/N]: " ans; \
