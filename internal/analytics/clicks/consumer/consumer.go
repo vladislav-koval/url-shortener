@@ -15,8 +15,8 @@ import (
 	"go.uber.org/zap"
 )
 
-type ClickRepository interface {
-	SaveClicks(ctx context.Context, events []events.ClickEvent) error
+type Service interface {
+	CreateClicks(ctx context.Context, events []events.ClickEvent) error
 }
 
 const (
@@ -26,7 +26,7 @@ const (
 
 type ClickConsumer struct {
 	reader       gokafka.Reader
-	repository   ClickRepository
+	service      Service
 	log          *logger.Logger
 	batchSize    int
 	batchTimeout time.Duration
@@ -40,7 +40,7 @@ type ClickConsumer struct {
 
 func NewClickConsumer(
 	reader gokafka.Reader,
-	repository ClickRepository,
+	service Service,
 	log *logger.Logger,
 	cfg Config,
 ) *ClickConsumer {
@@ -48,7 +48,7 @@ func NewClickConsumer(
 
 	return &ClickConsumer{
 		reader:       reader,
-		repository:   repository,
+		service:      service,
 		log:          log,
 		batchSize:    cfg.BatchSize,
 		batchTimeout: cfg.BatchTimeout,
@@ -219,7 +219,7 @@ func (p *ClickConsumer) flush(
 			}
 		}
 
-		err = p.repository.SaveClicks(ctx, clickEvents)
+		err = p.service.CreateClicks(ctx, clickEvents)
 
 		if err == nil || errors.Is(err, apperrors.ErrConflict) {
 			break

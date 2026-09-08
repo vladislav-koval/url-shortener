@@ -9,11 +9,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/vladislav-koval/url-shortener/internal/analytics/clicks/domain"
 	"github.com/vladislav-koval/url-shortener/internal/platform/apperrors"
-	"github.com/vladislav-koval/url-shortener/internal/platform/geo"
-	"github.com/vladislav-koval/url-shortener/internal/platform/messaging/events"
 	"github.com/vladislav-koval/url-shortener/internal/platform/repository/postgres/pool"
 	"github.com/vladislav-koval/url-shortener/internal/platform/repository/postgres/pool/mocks"
 	"go.uber.org/mock/gomock"
@@ -82,28 +82,46 @@ func initTest(t *testing.T) (*Repository, *mocks.MockPool) {
 }
 
 func TestSaveClicks(t *testing.T) {
-	inputEvents := []events.ClickEvent{
-		events.NewClickEvent(
-			"shortCode-0",
-			geo.Geo{
-				Country: "US",
-				City:    "New York",
-			},
-		),
-		events.NewClickEvent(
-			"shortCode-1",
-			geo.Geo{
-				Country: "DE",
-				City:    "Berlin",
-			},
-		),
-		events.NewClickEvent(
-			"shortCode-2",
-			geo.Geo{
-				Country: "JP",
-				City:    "Tokyo",
-			},
-		),
+	inputClicks := []domain.Click{
+		{
+			ID:        uuid.New(),
+			ShortCode: "shortCode-0",
+			ClickedAt: time.Now(),
+			Country:   "US",
+			City:      "New York",
+
+			DeviceType: "desktop",
+			OS:         "Windows",
+			Browser:    "Chrome",
+
+			Referer: "http://referer-0.com",
+		},
+		{
+			ID:        uuid.New(),
+			ShortCode: "shortCode-1",
+			ClickedAt: time.Now(),
+			Country:   "DE",
+			City:      "Berlin",
+
+			DeviceType: "mobile",
+			OS:         "iOS",
+			Browser:    "Safari",
+
+			Referer: "http://referer-1.com",
+		},
+		{
+			ID:        uuid.New(),
+			ShortCode: "shortCode-2",
+			ClickedAt: time.Now(),
+			Country:   "JP",
+			City:      "Tokyo",
+
+			DeviceType: "tablet",
+			OS:         "Android",
+			Browser:    "Firefox",
+
+			Referer: "http://referer-2.com",
+		},
 	}
 
 	expectedColumns := []string{
@@ -112,18 +130,26 @@ func TestSaveClicks(t *testing.T) {
 		"country",
 		"city",
 		"clicked_at",
+		"device_type",
+		"os",
+		"browser",
+		"referer",
 	}
 
-	expectedArgs := make([]any, 0, len(inputEvents)*len(expectedColumns))
+	expectedArgs := make([]any, 0, len(inputClicks)*len(expectedColumns))
 
-	for _, event := range inputEvents {
+	for _, click := range inputClicks {
 		expectedArgs = append(
 			expectedArgs,
-			event.ID,
-			event.ShortCode,
-			event.CountryCode,
-			event.City,
-			event.ClickedAt,
+			click.ID,
+			click.ShortCode,
+			click.Country,
+			click.City,
+			click.ClickedAt,
+			click.DeviceType,
+			click.OS,
+			click.Browser,
+			click.Referer,
 		)
 	}
 
@@ -135,14 +161,14 @@ func TestSaveClicks(t *testing.T) {
 	}{
 		{
 			name:         "success, all rows inserted",
-			rowsAffected: int64(len(inputEvents)),
+			rowsAffected: int64(len(inputClicks)),
 			check: func(t *testing.T, err error) {
 				assert.NoError(t, err)
 			},
 		},
 		{
 			name:         "some rows were duplicates",
-			rowsAffected: int64(len(inputEvents)) - 1,
+			rowsAffected: int64(len(inputClicks)) - 1,
 			check: func(t *testing.T, err error) {
 				assert.ErrorIs(t, err, apperrors.ErrConflict)
 			},
@@ -192,7 +218,7 @@ func TestSaveClicks(t *testing.T) {
 				).
 				Times(1)
 
-			err := repository.SaveClicks(context.Background(), inputEvents)
+			err := repository.SaveClicks(context.Background(), inputClicks)
 			tc.check(t, err)
 
 			assert.Equal(t, expectedColumns, parseColumns(t, capturedQuery))
@@ -200,7 +226,7 @@ func TestSaveClicks(t *testing.T) {
 			require.Len(
 				t,
 				capturedArgs,
-				len(inputEvents)*len(expectedColumns),
+				len(inputClicks)*len(expectedColumns),
 			)
 
 			assert.Equal(t, expectedArgs, capturedArgs)
@@ -208,8 +234,29 @@ func TestSaveClicks(t *testing.T) {
 			assertContiguousPlaceholders(
 				t,
 				capturedQuery,
-				len(inputEvents)*len(expectedColumns),
+				len(inputClicks)*len(expectedColumns),
 			)
+
+			// Regression: fmt.Sprintf-собранный список плейсхолдеров однажды получил
+			// лишнюю запятую перед закрывающей скобкой каждого VALUES(...) — плейсхолдеры
+			// $1..$n при этом оставались сплошными (assertContiguousPlaceholders такое не
+			// ловит, запятая — не плейсхолдер), а запрос падал на реальном Postgres с
+			// синтаксической ошибкой. Проверено вживую: "VALUES (1,2,...,9,)" — syntax
+			// error at or near ")".
+			assert.NotContains(t, capturedQuery, ",)", "trailing comma before closing paren makes the query invalid SQL")
 		})
 	}
+}
+
+func TestSaveClicks_EmptyInput(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	poolMock := mocks.NewMockPool(ctrl)
+	repository := NewRepository(poolMock)
+
+	// Пустой VALUES-список ("INSERT INTO ... VALUES  ON CONFLICT ...") — невалидный SQL,
+	// поэтому SaveClicks обязан выйти до похода в пул вообще. poolMock без EXPECT() на
+	// OpTimeout/Exec — если SaveClicks всё-таки попробует сходить в пул, gomock уронит тест.
+	err := repository.SaveClicks(context.Background(), nil)
+
+	assert.NoError(t, err)
 }
