@@ -3,6 +3,7 @@ package shortenerhttp
 import (
 	"errors"
 	"net/http"
+	"net/url"
 
 	"github.com/vladislav-koval/url-shortener/internal/platform/apperrors"
 	"github.com/vladislav-koval/url-shortener/internal/platform/geo"
@@ -38,7 +39,18 @@ func (h *Handler) Redirect(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	event := events.NewClickEvent(shortCode, location)
+	userAgent := r.UserAgent()
+	var hostname string = ""
+	referer := r.Referer()
+
+	if referer != "" {
+		parsedURL, err := url.Parse(referer)
+		if err == nil {
+			hostname = parsedURL.Hostname()
+		}
+	}
+
+	event := events.NewClickEvent(shortCode, location, userAgent, hostname)
 
 	originalURL, err := h.shortenerService.ResolveShortLink(r.Context(), shortCode, event)
 

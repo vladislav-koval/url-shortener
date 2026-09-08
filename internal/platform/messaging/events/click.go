@@ -14,15 +14,19 @@ type ClickEvent struct {
 	ClickedAt   time.Time `json:"clicked_at"`
 	CountryCode string    `json:"country"`
 	City        string    `json:"city"`
+	UserAgent   string    `json:"user_agent"`
+	Referer     string    `json:"referer"`
 }
 
-func NewClickEvent(shortCode string, location geo.Geo) ClickEvent {
+func NewClickEvent(shortCode string, location geo.Geo, userAgent string, referer string) ClickEvent {
 	return ClickEvent{
 		ID:          uuid.New(),
 		ShortCode:   shortCode,
 		ClickedAt:   time.Now(),
 		CountryCode: location.Country,
 		City:        location.City,
+		UserAgent:   userAgent,
+		Referer:     referer,
 	}
 }
 

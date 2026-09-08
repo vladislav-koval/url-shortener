@@ -9,6 +9,7 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.3
 	github.com/jackc/pgx/v5 v5.10.0
 	github.com/kelseyhightower/envconfig v1.4.0
+	github.com/mileusna/useragent v1.3.5
 	github.com/oschwald/geoip2-golang v1.13.0
 	github.com/redis/go-redis/v9 v9.21.0
 	github.com/segmentio/kafka-go v0.4.51

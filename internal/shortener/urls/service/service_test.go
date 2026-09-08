@@ -187,6 +187,8 @@ func TestResolveShortLink(t *testing.T) {
 		inputOriginalURL = "http://google.com"
 		inputCountry     = "US"
 		inputCity        = "New York"
+		inputUserAgent   = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+		inputReferer     = "http://referer.com"
 	)
 
 	t.Run("successful resolution and click recording", func(t *testing.T) {
@@ -200,7 +202,7 @@ func TestResolveShortLink(t *testing.T) {
 			}, nil).
 			Times(1)
 
-		event := events.NewClickEvent(inputShortCode, geo.Geo{Country: inputCountry, City: inputCity})
+		event := events.NewClickEvent(inputShortCode, geo.Geo{Country: inputCountry, City: inputCity}, inputUserAgent, inputReferer)
 
 		recorder.EXPECT().
 			RecordClick(event).
@@ -224,7 +226,7 @@ func TestResolveShortLink(t *testing.T) {
 			RecordClick(gomock.Any()).
 			Times(0)
 
-		event := events.NewClickEvent(inputShortCode, geo.Geo{Country: inputCountry, City: inputCity})
+		event := events.NewClickEvent(inputShortCode, geo.Geo{Country: inputCountry, City: inputCity}, inputUserAgent, inputReferer)
 		originalLink, err := svc.ResolveShortLink(context.Background(), inputShortCode, event)
 
 		assert.ErrorIs(t, err, apperrors.ErrNotFound)
