@@ -18,7 +18,7 @@ type ClickEvent struct {
 	Referer     string    `json:"referer"`
 }
 
-func NewClickEvent(shortCode string, location geo.Geo, userAgent string, referer string) ClickEvent {
+func NewClickEvent(shortCode string, location geo.Geo, userAgent string, refererHost string) ClickEvent {
 	return ClickEvent{
 		ID:          uuid.New(),
 		ShortCode:   shortCode,
@@ -26,7 +26,7 @@ func NewClickEvent(shortCode string, location geo.Geo, userAgent string, referer
 		CountryCode: location.Country,
 		City:        location.City,
 		UserAgent:   userAgent,
-		Referer:     referer,
+		Referer:     refererHost,
 	}
 }
 

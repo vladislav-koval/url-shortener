@@ -40,17 +40,15 @@ func (h *Handler) Redirect(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userAgent := r.UserAgent()
-	var hostname string = ""
-	referer := r.Referer()
 
-	if referer != "" {
-		parsedURL, err := url.Parse(referer)
-		if err == nil {
-			hostname = parsedURL.Hostname()
+	var refererHost string
+	if referer := r.Referer(); referer != "" {
+		if parsedURL, err := url.Parse(referer); err == nil {
+			refererHost = parsedURL.Hostname()
 		}
 	}
 
-	event := events.NewClickEvent(shortCode, location, userAgent, hostname)
+	event := events.NewClickEvent(shortCode, location, userAgent, refererHost)
 
 	originalURL, err := h.shortenerService.ResolveShortLink(r.Context(), shortCode, event)
 
