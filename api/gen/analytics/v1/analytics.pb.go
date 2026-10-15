@@ -10,6 +10,7 @@ import (
 	_ "github.com/envoyproxy/protoc-gen-validate/validate"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -21,6 +22,128 @@ const (
 	// Verify that runtime/protoimpl is sufficiently up-to-date.
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
+
+type Granularity int32
+
+const (
+	Granularity_GRANULARITY_UNSPECIFIED Granularity = 0
+	Granularity_GRANULARITY_AUTO        Granularity = 1
+	Granularity_GRANULARITY_5_MINUTES   Granularity = 2
+	Granularity_GRANULARITY_15_MINUTES  Granularity = 3
+	Granularity_GRANULARITY_30_MINUTES  Granularity = 4
+	Granularity_GRANULARITY_1_HOUR      Granularity = 5
+	Granularity_GRANULARITY_6_HOURS     Granularity = 6
+	Granularity_GRANULARITY_12_HOURS    Granularity = 7
+	Granularity_GRANULARITY_1_DAY       Granularity = 8
+	Granularity_GRANULARITY_7_DAYS      Granularity = 9
+)
+
+// Enum value maps for Granularity.
+var (
+	Granularity_name = map[int32]string{
+		0: "GRANULARITY_UNSPECIFIED",
+		1: "GRANULARITY_AUTO",
+		2: "GRANULARITY_5_MINUTES",
+		3: "GRANULARITY_15_MINUTES",
+		4: "GRANULARITY_30_MINUTES",
+		5: "GRANULARITY_1_HOUR",
+		6: "GRANULARITY_6_HOURS",
+		7: "GRANULARITY_12_HOURS",
+		8: "GRANULARITY_1_DAY",
+		9: "GRANULARITY_7_DAYS",
+	}
+	Granularity_value = map[string]int32{
+		"GRANULARITY_UNSPECIFIED": 0,
+		"GRANULARITY_AUTO":        1,
+		"GRANULARITY_5_MINUTES":   2,
+		"GRANULARITY_15_MINUTES":  3,
+		"GRANULARITY_30_MINUTES":  4,
+		"GRANULARITY_1_HOUR":      5,
+		"GRANULARITY_6_HOURS":     6,
+		"GRANULARITY_12_HOURS":    7,
+		"GRANULARITY_1_DAY":       8,
+		"GRANULARITY_7_DAYS":      9,
+	}
+)
+
+func (x Granularity) Enum() *Granularity {
+	p := new(Granularity)
+	*p = x
+	return p
+}
+
+func (x Granularity) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (Granularity) Descriptor() protoreflect.EnumDescriptor {
+	return file_api_proto_analytics_v1_analytics_proto_enumTypes[0].Descriptor()
+}
+
+func (Granularity) Type() protoreflect.EnumType {
+	return &file_api_proto_analytics_v1_analytics_proto_enumTypes[0]
+}
+
+func (x Granularity) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use Granularity.Descriptor instead.
+func (Granularity) EnumDescriptor() ([]byte, []int) {
+	return file_api_proto_analytics_v1_analytics_proto_rawDescGZIP(), []int{0}
+}
+
+type BreakdownItemType int32
+
+const (
+	BreakdownItemType_BREAKDOWN_ITEM_TYPE_UNSPECIFIED BreakdownItemType = 0
+	BreakdownItemType_BREAKDOWN_ITEM_TYPE_VALUE       BreakdownItemType = 1
+	BreakdownItemType_BREAKDOWN_ITEM_TYPE_OTHER       BreakdownItemType = 2
+	BreakdownItemType_BREAKDOWN_ITEM_TYPE_UNKNOWN     BreakdownItemType = 3
+)
+
+// Enum value maps for BreakdownItemType.
+var (
+	BreakdownItemType_name = map[int32]string{
+		0: "BREAKDOWN_ITEM_TYPE_UNSPECIFIED",
+		1: "BREAKDOWN_ITEM_TYPE_VALUE",
+		2: "BREAKDOWN_ITEM_TYPE_OTHER",
+		3: "BREAKDOWN_ITEM_TYPE_UNKNOWN",
+	}
+	BreakdownItemType_value = map[string]int32{
+		"BREAKDOWN_ITEM_TYPE_UNSPECIFIED": 0,
+		"BREAKDOWN_ITEM_TYPE_VALUE":       1,
+		"BREAKDOWN_ITEM_TYPE_OTHER":       2,
+		"BREAKDOWN_ITEM_TYPE_UNKNOWN":     3,
+	}
+)
+
+func (x BreakdownItemType) Enum() *BreakdownItemType {
+	p := new(BreakdownItemType)
+	*p = x
+	return p
+}
+
+func (x BreakdownItemType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (BreakdownItemType) Descriptor() protoreflect.EnumDescriptor {
+	return file_api_proto_analytics_v1_analytics_proto_enumTypes[1].Descriptor()
+}
+
+func (BreakdownItemType) Type() protoreflect.EnumType {
+	return &file_api_proto_analytics_v1_analytics_proto_enumTypes[1]
+}
+
+func (x BreakdownItemType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use BreakdownItemType.Descriptor instead.
+func (BreakdownItemType) EnumDescriptor() ([]byte, []int) {
+	return file_api_proto_analytics_v1_analytics_proto_rawDescGZIP(), []int{1}
+}
 
 type GetLinkClickCountsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -162,11 +285,335 @@ func (x *GetLinkClickCountsResponse) GetCounts() []*LinkClickCount {
 	return nil
 }
 
+type GetLinkAnalyticsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ShortCode     string                 `protobuf:"bytes,1,opt,name=short_code,json=shortCode,proto3" json:"short_code,omitempty"`
+	From          *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=from,proto3" json:"from,omitempty"`
+	To            *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=to,proto3" json:"to,omitempty"`
+	Granularity   Granularity            `protobuf:"varint,4,opt,name=granularity,proto3,enum=analytics.v1.Granularity" json:"granularity,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetLinkAnalyticsRequest) Reset() {
+	*x = GetLinkAnalyticsRequest{}
+	mi := &file_api_proto_analytics_v1_analytics_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetLinkAnalyticsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetLinkAnalyticsRequest) ProtoMessage() {}
+
+func (x *GetLinkAnalyticsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_analytics_v1_analytics_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetLinkAnalyticsRequest.ProtoReflect.Descriptor instead.
+func (*GetLinkAnalyticsRequest) Descriptor() ([]byte, []int) {
+	return file_api_proto_analytics_v1_analytics_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *GetLinkAnalyticsRequest) GetShortCode() string {
+	if x != nil {
+		return x.ShortCode
+	}
+	return ""
+}
+
+func (x *GetLinkAnalyticsRequest) GetFrom() *timestamppb.Timestamp {
+	if x != nil {
+		return x.From
+	}
+	return nil
+}
+
+func (x *GetLinkAnalyticsRequest) GetTo() *timestamppb.Timestamp {
+	if x != nil {
+		return x.To
+	}
+	return nil
+}
+
+func (x *GetLinkAnalyticsRequest) GetGranularity() Granularity {
+	if x != nil {
+		return x.Granularity
+	}
+	return Granularity_GRANULARITY_UNSPECIFIED
+}
+
+type GetLinkAnalyticsResponse struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	TotalClicks      int64                  `protobuf:"varint,1,opt,name=total_clicks,json=totalClicks,proto3" json:"total_clicks,omitempty"`
+	Timeline         []*TimelinePoint       `protobuf:"bytes,2,rep,name=timeline,proto3" json:"timeline,omitempty"`
+	Countries        *Breakdown             `protobuf:"bytes,3,opt,name=countries,proto3" json:"countries,omitempty"`
+	Cities           *Breakdown             `protobuf:"bytes,4,opt,name=cities,proto3" json:"cities,omitempty"`
+	Devices          *Breakdown             `protobuf:"bytes,5,opt,name=devices,proto3" json:"devices,omitempty"`
+	OperatingSystems *Breakdown             `protobuf:"bytes,6,opt,name=operating_systems,json=operatingSystems,proto3" json:"operating_systems,omitempty"`
+	Browsers         *Breakdown             `protobuf:"bytes,7,opt,name=browsers,proto3" json:"browsers,omitempty"`
+	Referrers        *Breakdown             `protobuf:"bytes,8,opt,name=referrers,proto3" json:"referrers,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *GetLinkAnalyticsResponse) Reset() {
+	*x = GetLinkAnalyticsResponse{}
+	mi := &file_api_proto_analytics_v1_analytics_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetLinkAnalyticsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetLinkAnalyticsResponse) ProtoMessage() {}
+
+func (x *GetLinkAnalyticsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_analytics_v1_analytics_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetLinkAnalyticsResponse.ProtoReflect.Descriptor instead.
+func (*GetLinkAnalyticsResponse) Descriptor() ([]byte, []int) {
+	return file_api_proto_analytics_v1_analytics_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *GetLinkAnalyticsResponse) GetTotalClicks() int64 {
+	if x != nil {
+		return x.TotalClicks
+	}
+	return 0
+}
+
+func (x *GetLinkAnalyticsResponse) GetTimeline() []*TimelinePoint {
+	if x != nil {
+		return x.Timeline
+	}
+	return nil
+}
+
+func (x *GetLinkAnalyticsResponse) GetCountries() *Breakdown {
+	if x != nil {
+		return x.Countries
+	}
+	return nil
+}
+
+func (x *GetLinkAnalyticsResponse) GetCities() *Breakdown {
+	if x != nil {
+		return x.Cities
+	}
+	return nil
+}
+
+func (x *GetLinkAnalyticsResponse) GetDevices() *Breakdown {
+	if x != nil {
+		return x.Devices
+	}
+	return nil
+}
+
+func (x *GetLinkAnalyticsResponse) GetOperatingSystems() *Breakdown {
+	if x != nil {
+		return x.OperatingSystems
+	}
+	return nil
+}
+
+func (x *GetLinkAnalyticsResponse) GetBrowsers() *Breakdown {
+	if x != nil {
+		return x.Browsers
+	}
+	return nil
+}
+
+func (x *GetLinkAnalyticsResponse) GetReferrers() *Breakdown {
+	if x != nil {
+		return x.Referrers
+	}
+	return nil
+}
+
+type TimelinePoint struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	BucketStart   *timestamppb.Timestamp `protobuf:"bytes,1,opt,name=bucket_start,json=bucketStart,proto3" json:"bucket_start,omitempty"`
+	Clicks        int64                  `protobuf:"varint,2,opt,name=clicks,proto3" json:"clicks,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TimelinePoint) Reset() {
+	*x = TimelinePoint{}
+	mi := &file_api_proto_analytics_v1_analytics_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TimelinePoint) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TimelinePoint) ProtoMessage() {}
+
+func (x *TimelinePoint) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_analytics_v1_analytics_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TimelinePoint.ProtoReflect.Descriptor instead.
+func (*TimelinePoint) Descriptor() ([]byte, []int) {
+	return file_api_proto_analytics_v1_analytics_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *TimelinePoint) GetBucketStart() *timestamppb.Timestamp {
+	if x != nil {
+		return x.BucketStart
+	}
+	return nil
+}
+
+func (x *TimelinePoint) GetClicks() int64 {
+	if x != nil {
+		return x.Clicks
+	}
+	return 0
+}
+
+type Breakdown struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Items         []*BreakdownItem       `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Breakdown) Reset() {
+	*x = Breakdown{}
+	mi := &file_api_proto_analytics_v1_analytics_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Breakdown) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Breakdown) ProtoMessage() {}
+
+func (x *Breakdown) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_analytics_v1_analytics_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Breakdown.ProtoReflect.Descriptor instead.
+func (*Breakdown) Descriptor() ([]byte, []int) {
+	return file_api_proto_analytics_v1_analytics_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *Breakdown) GetItems() []*BreakdownItem {
+	if x != nil {
+		return x.Items
+	}
+	return nil
+}
+
+type BreakdownItem struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Type          BreakdownItemType      `protobuf:"varint,1,opt,name=type,proto3,enum=analytics.v1.BreakdownItemType" json:"type,omitempty"`
+	Value         string                 `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+	Clicks        int64                  `protobuf:"varint,3,opt,name=clicks,proto3" json:"clicks,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BreakdownItem) Reset() {
+	*x = BreakdownItem{}
+	mi := &file_api_proto_analytics_v1_analytics_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BreakdownItem) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BreakdownItem) ProtoMessage() {}
+
+func (x *BreakdownItem) ProtoReflect() protoreflect.Message {
+	mi := &file_api_proto_analytics_v1_analytics_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BreakdownItem.ProtoReflect.Descriptor instead.
+func (*BreakdownItem) Descriptor() ([]byte, []int) {
+	return file_api_proto_analytics_v1_analytics_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *BreakdownItem) GetType() BreakdownItemType {
+	if x != nil {
+		return x.Type
+	}
+	return BreakdownItemType_BREAKDOWN_ITEM_TYPE_UNSPECIFIED
+}
+
+func (x *BreakdownItem) GetValue() string {
+	if x != nil {
+		return x.Value
+	}
+	return ""
+}
+
+func (x *BreakdownItem) GetClicks() int64 {
+	if x != nil {
+		return x.Clicks
+	}
+	return 0
+}
+
 var File_api_proto_analytics_v1_analytics_proto protoreflect.FileDescriptor
 
 const file_api_proto_analytics_v1_analytics_proto_rawDesc = "" +
 	"\n" +
-	"&api/proto/analytics/v1/analytics.proto\x12\fanalytics.v1\x1a\x17validate/validate.proto\"R\n" +
+	"&api/proto/analytics/v1/analytics.proto\x12\fanalytics.v1\x1a\x17validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"R\n" +
 	"\x19GetLinkClickCountsRequest\x125\n" +
 	"\vshort_codes\x18\x01 \x03(\tB\x14\xfaB\x11\x92\x01\x0e\b\x01\x10d\x18\x01\"\x06r\x04\x10\x01\x18\n" +
 	"R\n" +
@@ -177,9 +624,50 @@ const file_api_proto_analytics_v1_analytics_proto_rawDesc = "" +
 	"\vclick_count\x18\x02 \x01(\x03R\n" +
 	"clickCount\"R\n" +
 	"\x1aGetLinkClickCountsResponse\x124\n" +
-	"\x06counts\x18\x01 \x03(\v2\x1c.analytics.v1.LinkClickCountR\x06counts2{\n" +
+	"\x06counts\x18\x01 \x03(\v2\x1c.analytics.v1.LinkClickCountR\x06counts\"\xd1\x01\n" +
+	"\x17GetLinkAnalyticsRequest\x12\x1d\n" +
+	"\n" +
+	"short_code\x18\x01 \x01(\tR\tshortCode\x12.\n" +
+	"\x04from\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\x04from\x12*\n" +
+	"\x02to\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\x02to\x12;\n" +
+	"\vgranularity\x18\x04 \x01(\x0e2\x19.analytics.v1.GranularityR\vgranularity\"\xc3\x03\n" +
+	"\x18GetLinkAnalyticsResponse\x12!\n" +
+	"\ftotal_clicks\x18\x01 \x01(\x03R\vtotalClicks\x127\n" +
+	"\btimeline\x18\x02 \x03(\v2\x1b.analytics.v1.TimelinePointR\btimeline\x125\n" +
+	"\tcountries\x18\x03 \x01(\v2\x17.analytics.v1.BreakdownR\tcountries\x12/\n" +
+	"\x06cities\x18\x04 \x01(\v2\x17.analytics.v1.BreakdownR\x06cities\x121\n" +
+	"\adevices\x18\x05 \x01(\v2\x17.analytics.v1.BreakdownR\adevices\x12D\n" +
+	"\x11operating_systems\x18\x06 \x01(\v2\x17.analytics.v1.BreakdownR\x10operatingSystems\x123\n" +
+	"\bbrowsers\x18\a \x01(\v2\x17.analytics.v1.BreakdownR\bbrowsers\x125\n" +
+	"\treferrers\x18\b \x01(\v2\x17.analytics.v1.BreakdownR\treferrers\"f\n" +
+	"\rTimelinePoint\x12=\n" +
+	"\fbucket_start\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\vbucketStart\x12\x16\n" +
+	"\x06clicks\x18\x02 \x01(\x03R\x06clicks\">\n" +
+	"\tBreakdown\x121\n" +
+	"\x05items\x18\x01 \x03(\v2\x1b.analytics.v1.BreakdownItemR\x05items\"r\n" +
+	"\rBreakdownItem\x123\n" +
+	"\x04type\x18\x01 \x01(\x0e2\x1f.analytics.v1.BreakdownItemTypeR\x04type\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value\x12\x16\n" +
+	"\x06clicks\x18\x03 \x01(\x03R\x06clicks*\x8d\x02\n" +
+	"\vGranularity\x12\x1b\n" +
+	"\x17GRANULARITY_UNSPECIFIED\x10\x00\x12\x14\n" +
+	"\x10GRANULARITY_AUTO\x10\x01\x12\x19\n" +
+	"\x15GRANULARITY_5_MINUTES\x10\x02\x12\x1a\n" +
+	"\x16GRANULARITY_15_MINUTES\x10\x03\x12\x1a\n" +
+	"\x16GRANULARITY_30_MINUTES\x10\x04\x12\x16\n" +
+	"\x12GRANULARITY_1_HOUR\x10\x05\x12\x17\n" +
+	"\x13GRANULARITY_6_HOURS\x10\x06\x12\x18\n" +
+	"\x14GRANULARITY_12_HOURS\x10\a\x12\x15\n" +
+	"\x11GRANULARITY_1_DAY\x10\b\x12\x16\n" +
+	"\x12GRANULARITY_7_DAYS\x10\t*\x97\x01\n" +
+	"\x11BreakdownItemType\x12#\n" +
+	"\x1fBREAKDOWN_ITEM_TYPE_UNSPECIFIED\x10\x00\x12\x1d\n" +
+	"\x19BREAKDOWN_ITEM_TYPE_VALUE\x10\x01\x12\x1d\n" +
+	"\x19BREAKDOWN_ITEM_TYPE_OTHER\x10\x02\x12\x1f\n" +
+	"\x1bBREAKDOWN_ITEM_TYPE_UNKNOWN\x10\x032\xde\x01\n" +
 	"\x10AnalyticsService\x12g\n" +
-	"\x12GetLinkClickCounts\x12'.analytics.v1.GetLinkClickCountsRequest\x1a(.analytics.v1.GetLinkClickCountsResponseBKZIgithub.com/vladislav-koval/url-shortener/api/gen/analytics/v1;analyticsv1b\x06proto3"
+	"\x12GetLinkClickCounts\x12'.analytics.v1.GetLinkClickCountsRequest\x1a(.analytics.v1.GetLinkClickCountsResponse\x12a\n" +
+	"\x10GetLinkAnalytics\x12%.analytics.v1.GetLinkAnalyticsRequest\x1a&.analytics.v1.GetLinkAnalyticsResponseBKZIgithub.com/vladislav-koval/url-shortener/api/gen/analytics/v1;analyticsv1b\x06proto3"
 
 var (
 	file_api_proto_analytics_v1_analytics_proto_rawDescOnce sync.Once
@@ -193,21 +681,45 @@ func file_api_proto_analytics_v1_analytics_proto_rawDescGZIP() []byte {
 	return file_api_proto_analytics_v1_analytics_proto_rawDescData
 }
 
-var file_api_proto_analytics_v1_analytics_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_api_proto_analytics_v1_analytics_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
+var file_api_proto_analytics_v1_analytics_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_api_proto_analytics_v1_analytics_proto_goTypes = []any{
-	(*GetLinkClickCountsRequest)(nil),  // 0: analytics.v1.GetLinkClickCountsRequest
-	(*LinkClickCount)(nil),             // 1: analytics.v1.LinkClickCount
-	(*GetLinkClickCountsResponse)(nil), // 2: analytics.v1.GetLinkClickCountsResponse
+	(Granularity)(0),                   // 0: analytics.v1.Granularity
+	(BreakdownItemType)(0),             // 1: analytics.v1.BreakdownItemType
+	(*GetLinkClickCountsRequest)(nil),  // 2: analytics.v1.GetLinkClickCountsRequest
+	(*LinkClickCount)(nil),             // 3: analytics.v1.LinkClickCount
+	(*GetLinkClickCountsResponse)(nil), // 4: analytics.v1.GetLinkClickCountsResponse
+	(*GetLinkAnalyticsRequest)(nil),    // 5: analytics.v1.GetLinkAnalyticsRequest
+	(*GetLinkAnalyticsResponse)(nil),   // 6: analytics.v1.GetLinkAnalyticsResponse
+	(*TimelinePoint)(nil),              // 7: analytics.v1.TimelinePoint
+	(*Breakdown)(nil),                  // 8: analytics.v1.Breakdown
+	(*BreakdownItem)(nil),              // 9: analytics.v1.BreakdownItem
+	(*timestamppb.Timestamp)(nil),      // 10: google.protobuf.Timestamp
 }
 var file_api_proto_analytics_v1_analytics_proto_depIdxs = []int32{
-	1, // 0: analytics.v1.GetLinkClickCountsResponse.counts:type_name -> analytics.v1.LinkClickCount
-	0, // 1: analytics.v1.AnalyticsService.GetLinkClickCounts:input_type -> analytics.v1.GetLinkClickCountsRequest
-	2, // 2: analytics.v1.AnalyticsService.GetLinkClickCounts:output_type -> analytics.v1.GetLinkClickCountsResponse
-	2, // [2:3] is the sub-list for method output_type
-	1, // [1:2] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	3,  // 0: analytics.v1.GetLinkClickCountsResponse.counts:type_name -> analytics.v1.LinkClickCount
+	10, // 1: analytics.v1.GetLinkAnalyticsRequest.from:type_name -> google.protobuf.Timestamp
+	10, // 2: analytics.v1.GetLinkAnalyticsRequest.to:type_name -> google.protobuf.Timestamp
+	0,  // 3: analytics.v1.GetLinkAnalyticsRequest.granularity:type_name -> analytics.v1.Granularity
+	7,  // 4: analytics.v1.GetLinkAnalyticsResponse.timeline:type_name -> analytics.v1.TimelinePoint
+	8,  // 5: analytics.v1.GetLinkAnalyticsResponse.countries:type_name -> analytics.v1.Breakdown
+	8,  // 6: analytics.v1.GetLinkAnalyticsResponse.cities:type_name -> analytics.v1.Breakdown
+	8,  // 7: analytics.v1.GetLinkAnalyticsResponse.devices:type_name -> analytics.v1.Breakdown
+	8,  // 8: analytics.v1.GetLinkAnalyticsResponse.operating_systems:type_name -> analytics.v1.Breakdown
+	8,  // 9: analytics.v1.GetLinkAnalyticsResponse.browsers:type_name -> analytics.v1.Breakdown
+	8,  // 10: analytics.v1.GetLinkAnalyticsResponse.referrers:type_name -> analytics.v1.Breakdown
+	10, // 11: analytics.v1.TimelinePoint.bucket_start:type_name -> google.protobuf.Timestamp
+	9,  // 12: analytics.v1.Breakdown.items:type_name -> analytics.v1.BreakdownItem
+	1,  // 13: analytics.v1.BreakdownItem.type:type_name -> analytics.v1.BreakdownItemType
+	2,  // 14: analytics.v1.AnalyticsService.GetLinkClickCounts:input_type -> analytics.v1.GetLinkClickCountsRequest
+	5,  // 15: analytics.v1.AnalyticsService.GetLinkAnalytics:input_type -> analytics.v1.GetLinkAnalyticsRequest
+	4,  // 16: analytics.v1.AnalyticsService.GetLinkClickCounts:output_type -> analytics.v1.GetLinkClickCountsResponse
+	6,  // 17: analytics.v1.AnalyticsService.GetLinkAnalytics:output_type -> analytics.v1.GetLinkAnalyticsResponse
+	16, // [16:18] is the sub-list for method output_type
+	14, // [14:16] is the sub-list for method input_type
+	14, // [14:14] is the sub-list for extension type_name
+	14, // [14:14] is the sub-list for extension extendee
+	0,  // [0:14] is the sub-list for field type_name
 }
 
 func init() { file_api_proto_analytics_v1_analytics_proto_init() }
@@ -220,13 +732,14 @@ func file_api_proto_analytics_v1_analytics_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_proto_analytics_v1_analytics_proto_rawDesc), len(file_api_proto_analytics_v1_analytics_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   3,
+			NumEnums:      2,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_api_proto_analytics_v1_analytics_proto_goTypes,
 		DependencyIndexes: file_api_proto_analytics_v1_analytics_proto_depIdxs,
+		EnumInfos:         file_api_proto_analytics_v1_analytics_proto_enumTypes,
 		MessageInfos:      file_api_proto_analytics_v1_analytics_proto_msgTypes,
 	}.Build()
 	File_api_proto_analytics_v1_analytics_proto = out.File

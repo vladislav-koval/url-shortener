@@ -1,6 +1,11 @@
 package postgres
 
-import "github.com/vladislav-koval/url-shortener/internal/analytics/stats/domain"
+import (
+	"time"
+
+	"github.com/vladislav-koval/url-shortener/internal/analytics/stats/domain"
+	"github.com/vladislav-koval/url-shortener/internal/analytics/stats/service"
+)
 
 type statRow struct {
 	shortCode  string
@@ -15,4 +20,44 @@ func rowsLinkClickCountToDomain(rows []statRow) []domain.LinkClickCount {
 	}
 
 	return domainLinkClickCount
+}
+
+type breakdownItemRow struct {
+	breakdownType service.BreakdownItemType
+	value         string
+	clicks        int
+}
+
+type timelineRow struct {
+	bucketStart time.Time
+	clicks      int
+}
+
+func toServiceBreakdown(rows []breakdownItemRow) service.Breakdown {
+	breakdownItems := make([]service.BreakdownItem, len(rows))
+
+	for i, row := range rows {
+		breakdownItems[i] = service.BreakdownItem{
+			Type:   row.breakdownType,
+			Value:  row.value,
+			Clicks: row.clicks,
+		}
+	}
+
+	return service.Breakdown{
+		Items: breakdownItems,
+	}
+}
+
+func toServiceTimeline(rows []timelineRow) []service.TimelinePoint {
+	timelinePoints := make([]service.TimelinePoint, len(rows))
+
+	for i, row := range rows {
+		timelinePoints[i] = service.TimelinePoint{
+			BucketStart: row.bucketStart,
+			Clicks:      row.clicks,
+		}
+	}
+
+	return timelinePoints
 }

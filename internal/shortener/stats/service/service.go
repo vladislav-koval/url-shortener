@@ -16,10 +16,12 @@ type Service struct {
 
 type Repository interface {
 	GetLinksByUserID(ctx context.Context, userID uuid.UUID, p pagination.Pagination) ([]domain.Link, int, error)
+	GetLinkByShortCodeAndUserID(ctx context.Context, shortCode string, userID uuid.UUID) (domain.Link, error)
 }
 
 type GRPCClient interface {
 	GetClickCounts(ctx context.Context, shortCodes []string) ([]domain.LinkClickCount, error)
+	GetLinkAnalytics(ctx context.Context, query GetLinkAnalyticsQuery) (GetLinkAnalyticsResult, error)
 }
 
 func NewService(repository Repository, grpcClient GRPCClient) *Service {

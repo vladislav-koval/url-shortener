@@ -46,6 +46,5 @@ func (r *Repository) CountByShortCodes(ctx context.Context, shortCodes []string)
 		return nil, fmt.Errorf("next rows: %w", err)
 	}
 
-	linkClickCountDomains := rowsLinkClickCountToDomain(stats)
-	return linkClickCountDomains, nil
+	return rowsLinkClickCountToDomain(stats), nil
 }

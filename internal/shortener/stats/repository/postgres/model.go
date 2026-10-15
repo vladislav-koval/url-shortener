@@ -12,14 +12,19 @@ type linkRow struct {
 	createdAt   time.Time
 }
 
+func linkFromRow(link linkRow) domain.Link {
+	return domain.Link{
+		ShortCode:   link.shortCode,
+		OriginalURL: link.originalUrl,
+		CreatedAt:   link.createdAt,
+	}
+}
+
 func linksFromRow(links []linkRow) []domain.Link {
 	result := make([]domain.Link, len(links))
+
 	for i, link := range links {
-		result[i] = domain.Link{
-			ShortCode:   link.shortCode,
-			OriginalURL: link.originalUrl,
-			CreatedAt:   link.createdAt,
-		}
+		result[i] = linkFromRow(link)
 	}
 
 	return result
