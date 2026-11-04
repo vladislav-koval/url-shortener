@@ -9,6 +9,7 @@ import (
 	"github.com/vladislav-koval/url-shortener/internal/platform/transport/http/middleware"
 	"github.com/vladislav-koval/url-shortener/internal/platform/transport/http/server"
 	"github.com/vladislav-koval/url-shortener/internal/shortener/stats/domain"
+	"github.com/vladislav-koval/url-shortener/internal/shortener/stats/service"
 )
 
 type Handler struct {
@@ -17,6 +18,7 @@ type Handler struct {
 
 type Service interface {
 	GetLinkStats(ctx context.Context, userID uuid.UUID, pagination pagination.Pagination) (domain.LinkStatsPage, error)
+	GetLinkAnalytics(ctx context.Context, query service.GetLinkAnalyticsQuery, userID uuid.UUID) (service.GetLinkAnalyticsResult, error)
 }
 
 func NewHTTPHandler(s Service) *Handler {
@@ -31,6 +33,12 @@ func (h *Handler) APIRoutes(resolver authorization.Resolver, cookieSecure bool) 
 			Method:     "GET",
 			Path:       "/clicks",
 			Handler:    h.GetLinkStats,
+			Middleware: []middleware.Middleware{middleware.CurrentUser(resolver, cookieSecure), middleware.RequireUser()},
+		},
+		{
+			Method:     "GET",
+			Path:       "/analytics/{code}",
+			Handler:    h.GetLinkAnalytics,
 			Middleware: []middleware.Middleware{middleware.CurrentUser(resolver, cookieSecure), middleware.RequireUser()},
 		},
 	}

@@ -418,3 +418,849 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = GetLinkClickCountsResponseValidationError{}
+
+// Validate checks the field values on GetLinkAnalyticsRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetLinkAnalyticsRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetLinkAnalyticsRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetLinkAnalyticsRequestMultiError, or nil if none found.
+func (m *GetLinkAnalyticsRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetLinkAnalyticsRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ShortCode
+
+	if all {
+		switch v := interface{}(m.GetFrom()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetLinkAnalyticsRequestValidationError{
+					field:  "From",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetLinkAnalyticsRequestValidationError{
+					field:  "From",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetFrom()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetLinkAnalyticsRequestValidationError{
+				field:  "From",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetTo()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetLinkAnalyticsRequestValidationError{
+					field:  "To",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetLinkAnalyticsRequestValidationError{
+					field:  "To",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetTo()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetLinkAnalyticsRequestValidationError{
+				field:  "To",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for Granularity
+
+	if len(errors) > 0 {
+		return GetLinkAnalyticsRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetLinkAnalyticsRequestMultiError is an error wrapping multiple validation
+// errors returned by GetLinkAnalyticsRequest.ValidateAll() if the designated
+// constraints aren't met.
+type GetLinkAnalyticsRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetLinkAnalyticsRequestMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetLinkAnalyticsRequestMultiError) AllErrors() []error { return m }
+
+// GetLinkAnalyticsRequestValidationError is the validation error returned by
+// GetLinkAnalyticsRequest.Validate if the designated constraints aren't met.
+type GetLinkAnalyticsRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetLinkAnalyticsRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetLinkAnalyticsRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetLinkAnalyticsRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetLinkAnalyticsRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetLinkAnalyticsRequestValidationError) ErrorName() string {
+	return "GetLinkAnalyticsRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetLinkAnalyticsRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetLinkAnalyticsRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetLinkAnalyticsRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetLinkAnalyticsRequestValidationError{}
+
+// Validate checks the field values on GetLinkAnalyticsResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetLinkAnalyticsResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetLinkAnalyticsResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetLinkAnalyticsResponseMultiError, or nil if none found.
+func (m *GetLinkAnalyticsResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetLinkAnalyticsResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for TotalClicks
+
+	for idx, item := range m.GetTimeline() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, GetLinkAnalyticsResponseValidationError{
+						field:  fmt.Sprintf("Timeline[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, GetLinkAnalyticsResponseValidationError{
+						field:  fmt.Sprintf("Timeline[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GetLinkAnalyticsResponseValidationError{
+					field:  fmt.Sprintf("Timeline[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if all {
+		switch v := interface{}(m.GetCountries()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetLinkAnalyticsResponseValidationError{
+					field:  "Countries",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetLinkAnalyticsResponseValidationError{
+					field:  "Countries",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetCountries()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetLinkAnalyticsResponseValidationError{
+				field:  "Countries",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetCities()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetLinkAnalyticsResponseValidationError{
+					field:  "Cities",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetLinkAnalyticsResponseValidationError{
+					field:  "Cities",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetCities()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetLinkAnalyticsResponseValidationError{
+				field:  "Cities",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetDevices()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetLinkAnalyticsResponseValidationError{
+					field:  "Devices",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetLinkAnalyticsResponseValidationError{
+					field:  "Devices",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetDevices()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetLinkAnalyticsResponseValidationError{
+				field:  "Devices",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetOperatingSystems()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetLinkAnalyticsResponseValidationError{
+					field:  "OperatingSystems",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetLinkAnalyticsResponseValidationError{
+					field:  "OperatingSystems",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetOperatingSystems()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetLinkAnalyticsResponseValidationError{
+				field:  "OperatingSystems",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetBrowsers()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetLinkAnalyticsResponseValidationError{
+					field:  "Browsers",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetLinkAnalyticsResponseValidationError{
+					field:  "Browsers",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetBrowsers()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetLinkAnalyticsResponseValidationError{
+				field:  "Browsers",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetReferrers()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetLinkAnalyticsResponseValidationError{
+					field:  "Referrers",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetLinkAnalyticsResponseValidationError{
+					field:  "Referrers",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetReferrers()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetLinkAnalyticsResponseValidationError{
+				field:  "Referrers",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return GetLinkAnalyticsResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetLinkAnalyticsResponseMultiError is an error wrapping multiple validation
+// errors returned by GetLinkAnalyticsResponse.ValidateAll() if the designated
+// constraints aren't met.
+type GetLinkAnalyticsResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetLinkAnalyticsResponseMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetLinkAnalyticsResponseMultiError) AllErrors() []error { return m }
+
+// GetLinkAnalyticsResponseValidationError is the validation error returned by
+// GetLinkAnalyticsResponse.Validate if the designated constraints aren't met.
+type GetLinkAnalyticsResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetLinkAnalyticsResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetLinkAnalyticsResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetLinkAnalyticsResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetLinkAnalyticsResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetLinkAnalyticsResponseValidationError) ErrorName() string {
+	return "GetLinkAnalyticsResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetLinkAnalyticsResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetLinkAnalyticsResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetLinkAnalyticsResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetLinkAnalyticsResponseValidationError{}
+
+// Validate checks the field values on TimelinePoint with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *TimelinePoint) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on TimelinePoint with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in TimelinePointMultiError, or
+// nil if none found.
+func (m *TimelinePoint) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *TimelinePoint) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetBucketStart()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, TimelinePointValidationError{
+					field:  "BucketStart",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, TimelinePointValidationError{
+					field:  "BucketStart",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetBucketStart()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return TimelinePointValidationError{
+				field:  "BucketStart",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for Clicks
+
+	if len(errors) > 0 {
+		return TimelinePointMultiError(errors)
+	}
+
+	return nil
+}
+
+// TimelinePointMultiError is an error wrapping multiple validation errors
+// returned by TimelinePoint.ValidateAll() if the designated constraints
+// aren't met.
+type TimelinePointMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m TimelinePointMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m TimelinePointMultiError) AllErrors() []error { return m }
+
+// TimelinePointValidationError is the validation error returned by
+// TimelinePoint.Validate if the designated constraints aren't met.
+type TimelinePointValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e TimelinePointValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e TimelinePointValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e TimelinePointValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e TimelinePointValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e TimelinePointValidationError) ErrorName() string { return "TimelinePointValidationError" }
+
+// Error satisfies the builtin error interface
+func (e TimelinePointValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTimelinePoint.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = TimelinePointValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = TimelinePointValidationError{}
+
+// Validate checks the field values on Breakdown with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *Breakdown) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on Breakdown with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in BreakdownMultiError, or nil
+// if none found.
+func (m *Breakdown) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *Breakdown) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	for idx, item := range m.GetItems() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, BreakdownValidationError{
+						field:  fmt.Sprintf("Items[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, BreakdownValidationError{
+						field:  fmt.Sprintf("Items[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return BreakdownValidationError{
+					field:  fmt.Sprintf("Items[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return BreakdownMultiError(errors)
+	}
+
+	return nil
+}
+
+// BreakdownMultiError is an error wrapping multiple validation errors returned
+// by Breakdown.ValidateAll() if the designated constraints aren't met.
+type BreakdownMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m BreakdownMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m BreakdownMultiError) AllErrors() []error { return m }
+
+// BreakdownValidationError is the validation error returned by
+// Breakdown.Validate if the designated constraints aren't met.
+type BreakdownValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e BreakdownValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e BreakdownValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e BreakdownValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e BreakdownValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e BreakdownValidationError) ErrorName() string { return "BreakdownValidationError" }
+
+// Error satisfies the builtin error interface
+func (e BreakdownValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sBreakdown.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = BreakdownValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = BreakdownValidationError{}
+
+// Validate checks the field values on BreakdownItem with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *BreakdownItem) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on BreakdownItem with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in BreakdownItemMultiError, or
+// nil if none found.
+func (m *BreakdownItem) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *BreakdownItem) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Type
+
+	// no validation rules for Value
+
+	// no validation rules for Clicks
+
+	if len(errors) > 0 {
+		return BreakdownItemMultiError(errors)
+	}
+
+	return nil
+}
+
+// BreakdownItemMultiError is an error wrapping multiple validation errors
+// returned by BreakdownItem.ValidateAll() if the designated constraints
+// aren't met.
+type BreakdownItemMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m BreakdownItemMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m BreakdownItemMultiError) AllErrors() []error { return m }
+
+// BreakdownItemValidationError is the validation error returned by
+// BreakdownItem.Validate if the designated constraints aren't met.
+type BreakdownItemValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e BreakdownItemValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e BreakdownItemValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e BreakdownItemValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e BreakdownItemValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e BreakdownItemValidationError) ErrorName() string { return "BreakdownItemValidationError" }
+
+// Error satisfies the builtin error interface
+func (e BreakdownItemValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sBreakdownItem.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = BreakdownItemValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = BreakdownItemValidationError{}

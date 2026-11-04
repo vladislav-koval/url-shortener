@@ -3,11 +3,13 @@ syntax = "proto3";
 package analytics.v1;
 
 import "validate/validate.proto";
+import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/vladislav-koval/url-shortener/api/gen/analytics/v1;analyticsv1";
 
 service AnalyticsService {
   rpc GetLinkClickCounts(GetLinkClickCountsRequest) returns (GetLinkClickCountsResponse);
+  rpc GetLinkAnalytics(GetLinkAnalyticsRequest) returns (GetLinkAnalyticsResponse);
 }
 
 message GetLinkClickCountsRequest {
@@ -33,4 +35,59 @@ message LinkClickCount {
 
 message GetLinkClickCountsResponse {
   repeated LinkClickCount counts = 1;
+}
+
+enum Granularity {
+  GRANULARITY_UNSPECIFIED = 0;
+  GRANULARITY_AUTO = 1;
+  GRANULARITY_5_MINUTES = 2;
+  GRANULARITY_15_MINUTES = 3;
+  GRANULARITY_30_MINUTES = 4;
+  GRANULARITY_1_HOUR = 5;
+  GRANULARITY_6_HOURS = 6;
+  GRANULARITY_12_HOURS = 7;
+  GRANULARITY_1_DAY = 8;
+  GRANULARITY_7_DAYS = 9;
+}
+
+enum BreakdownItemType {
+  BREAKDOWN_ITEM_TYPE_UNSPECIFIED = 0;
+  BREAKDOWN_ITEM_TYPE_VALUE = 1;
+  BREAKDOWN_ITEM_TYPE_OTHER = 2;
+  BREAKDOWN_ITEM_TYPE_UNKNOWN = 3;
+}
+
+message GetLinkAnalyticsRequest {
+  string short_code = 1;
+  google.protobuf.Timestamp from = 2;
+  google.protobuf.Timestamp to = 3;
+  Granularity granularity = 4;
+}
+
+message GetLinkAnalyticsResponse {
+  int64 total_clicks = 1;
+
+  repeated TimelinePoint timeline = 2;
+
+  Breakdown countries = 3;
+  Breakdown cities = 4;
+  Breakdown devices = 5;
+  Breakdown operating_systems = 6;
+  Breakdown browsers = 7;
+  Breakdown referrers = 8;
+}
+
+message TimelinePoint {
+  google.protobuf.Timestamp bucket_start = 1;
+  int64 clicks = 2;
+}
+
+message Breakdown {
+  repeated BreakdownItem items = 1;
+}
+
+message BreakdownItem {
+  BreakdownItemType type = 1;
+  string value = 2;
+  int64 clicks = 3;
 }

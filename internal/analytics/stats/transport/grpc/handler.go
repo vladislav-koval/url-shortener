@@ -5,6 +5,7 @@ import (
 
 	analyticsv1 "github.com/vladislav-koval/url-shortener/api/gen/analytics/v1"
 	"github.com/vladislav-koval/url-shortener/internal/analytics/stats/domain"
+	"github.com/vladislav-koval/url-shortener/internal/analytics/stats/service"
 	"google.golang.org/grpc"
 )
 
@@ -16,6 +17,7 @@ type Handler struct {
 
 type Service interface {
 	GetLinkClickCount(ctx context.Context, shortCodes []string) ([]domain.LinkClickCount, error)
+	GetLinkAnalytics(ctx context.Context, query service.GetLinkAnalyticsQuery) (service.GetLinkAnalyticsResult, error)
 }
 
 func NewHandler(service Service) *Handler {
